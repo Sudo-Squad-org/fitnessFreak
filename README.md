@@ -5,10 +5,12 @@ Table of Contents
 •	Overview
 •	Features
 
-Overview
+**Overview**
+
 PROJECT_NAME is a fitness application that allows users to discover and book workouts, join live or on‑demand sessions, track their progress, and stay motivated through community features. It is designed to be modular so you can independently scale web, mobile, and backend services.
 
-Features
+**Features**
+
 User authentication and profiles (signup, login, password reset, profile management)
 Browse and search classes by category, intensity, trainer, and schedule
 Book and manage center‑based and at‑home workout sessions
