@@ -12,6 +12,7 @@ class ProfileCreate(BaseModel):
     height_cm: float = Field(..., gt=100, lt=250)
     activity_level: str = Field(..., pattern="^(sedentary|lightly_active|moderately_active|very_active|extra_active)$")
     goal: str = Field(..., pattern="^(weight_loss|muscle_gain|maintain)$")
+    health_conditions: Optional[List[str]] = Field(default_factory=list)
 
 
 class ProfileUpdate(BaseModel):
@@ -21,6 +22,7 @@ class ProfileUpdate(BaseModel):
     height_cm: Optional[float] = Field(None, gt=100, lt=250)
     activity_level: Optional[str] = Field(None, pattern="^(sedentary|lightly_active|moderately_active|very_active|extra_active)$")
     goal: Optional[str] = Field(None, pattern="^(weight_loss|muscle_gain|maintain)$")
+    health_conditions: Optional[List[str]] = None
 
 
 class ProfileOut(BaseModel):
@@ -32,6 +34,7 @@ class ProfileOut(BaseModel):
     height_cm: float
     activity_level: str
     goal: str
+    health_conditions: Optional[str] = None
     tdee: Optional[float]
     target_calories: Optional[float]
     target_protein_g: Optional[float]

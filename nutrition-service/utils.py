@@ -11,6 +11,19 @@ ACTIVITY_MULTIPLIERS = {
     "extra_active": 1.9,
 }
 
+# Calorie factor and macro overrides per health condition.
+# calorie_factor: multiplied onto goal-adjusted calories (most restrictive wins across conditions).
+# carbs_pct / fat_pct: upper-bound override (min wins); protein_pct: lower-bound override (max wins).
+# Macros are re-normalised to sum to 1.0 after all conditions are applied.
+HEALTH_CONDITION_ADJUSTMENTS = {
+    "diabetes":         {"calorie_factor": 0.90, "carbs_pct": 0.30, "protein_pct": 0.35, "fat_pct": 0.35},
+    "hypertension":     {"calorie_factor": 0.95},
+    "high_cholesterol": {"calorie_factor": 0.95, "fat_pct": 0.20},
+    "hypothyroidism":   {"calorie_factor": 0.85},
+    "pcos":             {"calorie_factor": 0.90, "carbs_pct": 0.30, "protein_pct": 0.35, "fat_pct": 0.35},
+    "heart_disease":    {"calorie_factor": 0.90, "fat_pct": 0.20},
+}
+
 
 def calculate_bmr(weight_kg: float, height_cm: float, age: int, gender: str) -> float:
     """Mifflin-St Jeor BMR formula."""
@@ -25,13 +38,16 @@ def calculate_tdee(weight_kg: float, height_cm: float, age: int, gender: str, ac
     return round(bmr * ACTIVITY_MULTIPLIERS[activity_level], 1)
 
 
-def calculate_targets(tdee: float, goal: str) -> dict:
+def calculate_targets(tdee: float, goal: str, health_conditions: list = None) -> dict:
     """
-    Returns target calories and macros based on goal.
+    Returns target calories and macros based on goal and optional health conditions.
 
-    Weight loss:  -20% calories, 30% protein / 40% carbs / 30% fat
-    Muscle gain:  +15% calories, 35% protein / 45% carbs / 20% fat
-    Maintain:     TDEE calories, 25% protein / 50% carbs / 25% fat
+    Base splits by goal:
+      Weight loss:  -20% calories, 30% protein / 40% carbs / 30% fat
+      Muscle gain:  +15% calories, 35% protein / 45% carbs / 20% fat
+      Maintain:     TDEE calories, 25% protein / 50% carbs / 25% fat
+
+    Health conditions apply a calorie reduction factor and tighten macro limits.
     """
     if goal == "weight_loss":
         target_cal = tdee * 0.80
@@ -42,6 +58,26 @@ def calculate_targets(tdee: float, goal: str) -> dict:
     else:  # maintain
         target_cal = tdee
         protein_pct, carbs_pct, fat_pct = 0.25, 0.50, 0.25
+
+    if health_conditions:
+        calorie_factor = 1.0
+        for cond in health_conditions:
+            adj = HEALTH_CONDITION_ADJUSTMENTS.get(cond, {})
+            calorie_factor = min(calorie_factor, adj.get("calorie_factor", 1.0))
+            if "carbs_pct" in adj:
+                carbs_pct = min(carbs_pct, adj["carbs_pct"])
+            if "fat_pct" in adj:
+                fat_pct = min(fat_pct, adj["fat_pct"])
+            if "protein_pct" in adj:
+                protein_pct = max(protein_pct, adj["protein_pct"])
+
+        target_cal *= calorie_factor
+
+        # Re-normalise so macros always sum to 1.0
+        total = protein_pct + carbs_pct + fat_pct
+        protein_pct /= total
+        carbs_pct /= total
+        fat_pct /= total
 
     target_cal = round(target_cal, 1)
 

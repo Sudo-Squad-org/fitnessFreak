@@ -1,10 +1,18 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/common/FadeIn";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export const CTASection = () => {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    navigate(currentUser ? "/dashboard" : "/login");
+  };
+
   return (
     <section className="relative overflow-hidden bg-zinc-950 dark:bg-zinc-900 py-24 sm:py-32">
       {/* Background grid */}
@@ -30,14 +38,12 @@ export const CTASection = () => {
 
           <FadeIn delay={0.15} className="flex flex-col items-center gap-4 sm:flex-row lg:shrink-0">
             <Button
-              asChild
               size="lg"
+              onClick={handleGetStarted}
               className="h-12 rounded-full bg-white px-8 text-zinc-900 hover:bg-zinc-100 font-semibold gap-2"
             >
-              <Link to="/signup">
-                Join for free
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              Join for free
+              <ArrowRight className="h-4 w-4" />
             </Button>
             <Button
               asChild

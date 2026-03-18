@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { FadeIn } from "@/components/common/FadeIn";
 import {
   ChevronRight, ChevronLeft, Flame, Target,
-  Activity, User, CheckCircle2, Scale,
+  Activity, User, CheckCircle2, Heart,
 } from "lucide-react";
 
 const ACTIVITY_OPTIONS = [
@@ -23,35 +23,60 @@ const GOAL_OPTIONS = [
   { value: "muscle_gain", label: "Build Muscle", desc: "Calorie surplus, extra protein", icon: "💪", color: "border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-500/5" },
 ];
 
-const steps = ["Personal Info", "Activity Level", "Your Goal"];
+const HEALTH_CONDITIONS = [
+  { value: "diabetes", label: "Diabetes / High Blood Sugar", icon: "🩸", desc: "Lower carb targets, higher protein" },
+  { value: "hypertension", label: "High Blood Pressure", icon: "❤️", desc: "Moderate calorie reduction" },
+  { value: "high_cholesterol", label: "High Cholesterol", icon: "🫀", desc: "Reduced fat targets" },
+  { value: "hypothyroidism", label: "Thyroid (Hypothyroidism)", icon: "🦋", desc: "Adjusted for slower metabolism" },
+  { value: "pcos", label: "PCOS", icon: "🌸", desc: "Lower carb, higher protein approach" },
+  { value: "heart_disease", label: "Heart Disease", icon: "💓", desc: "Reduced calories and fat" },
+];
 
-export const ProfileSetup = ({ onComplete }) => {
+const steps = ["Personal Info", "Activity Level", "Your Goal", "Health Conditions"];
+
+export const ProfileSetup = ({ onComplete, initialData }) => {
+  const isEditing = !!initialData;
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
 
   const [form, setForm] = useState({
-    age: "",
-    gender: "male",
-    weight_kg: "",
-    height_cm: "",
-    activity_level: "moderately_active",
-    goal: "maintain",
+    age: initialData?.age ?? "",
+    gender: initialData?.gender ?? "male",
+    weight_kg: initialData?.weight_kg ?? "",
+    height_cm: initialData?.height_cm ?? "",
+    activity_level: initialData?.activity_level ?? "moderately_active",
+    goal: initialData?.goal ?? "maintain",
+    health_conditions: initialData?.health_conditions
+      ? initialData.health_conditions.split(",").filter(Boolean)
+      : [],
   });
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  const toggleCondition = (value) => {
+    setForm((f) => ({
+      ...f,
+      health_conditions: f.health_conditions.includes(value)
+        ? f.health_conditions.filter((c) => c !== value)
+        : [...f.health_conditions, value],
+    }));
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await nutritionService.createProfile({
+      const payload = {
         ...form,
         age: parseInt(form.age),
         weight_kg: parseFloat(form.weight_kg),
         height_cm: parseFloat(form.height_cm),
-      });
+      };
+      const res = isEditing
+        ? await nutritionService.updateProfile(payload)
+        : await nutritionService.createProfile(payload);
       setResult(res.data);
     } catch (e) {
       setError(e?.response?.data?.detail || "Something went wrong. Please try again.");
@@ -66,9 +91,12 @@ export const ProfileSetup = ({ onComplete }) => {
         <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center mb-6">
           <CheckCircle2 className="h-8 w-8 text-emerald-500" />
         </div>
-        <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">You're all set!</h2>
+        <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
+          {isEditing ? "Profile updated!" : "You're all set!"}
+        </h2>
         <p className="text-zinc-500 mb-8 max-w-sm">
-          Your daily targets have been calculated using the Mifflin-St Jeor formula.
+          Your daily targets have been calculated using the Mifflin-St Jeor formula
+          {form.health_conditions.length > 0 && ", adjusted for your health conditions"}.
         </p>
 
         <div className="grid grid-cols-2 gap-4 w-full max-w-sm mb-8">
@@ -220,6 +248,49 @@ export const ProfileSetup = ({ onComplete }) => {
                 </div>
               </button>
             ))}
+          </div>
+        )}
+
+        {/* Step 3: Health Conditions */}
+        {step === 3 && (
+          <div className="space-y-4">
+            <div className="text-center mb-6">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
+                <Heart className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <h2 className="text-xl font-bold text-foreground">Any health conditions?</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Select all that apply — we'll adjust your targets accordingly
+              </p>
+            </div>
+
+            {HEALTH_CONDITIONS.map((cond) => {
+              const selected = form.health_conditions.includes(cond.value);
+              return (
+                <button
+                  key={cond.value}
+                  onClick={() => toggleCondition(cond.value)}
+                  className={`w-full text-left rounded-xl border-2 p-4 transition-all ${
+                    selected
+                      ? "border-indigo-400 dark:border-indigo-600 bg-indigo-50 dark:bg-indigo-500/10"
+                      : "border-border hover:border-foreground/20 hover:bg-muted/50"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{cond.icon}</span>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm text-foreground">{cond.label}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{cond.desc}</p>
+                    </div>
+                    {selected && <CheckCircle2 className="h-5 w-5 text-indigo-500 shrink-0" />}
+                  </div>
+                </button>
+              );
+            })}
+
+            <p className="text-xs text-muted-foreground text-center pt-2">
+              No conditions? Leave all unselected and continue.
+            </p>
           </div>
         )}
 

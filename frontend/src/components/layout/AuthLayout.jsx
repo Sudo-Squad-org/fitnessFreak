@@ -3,12 +3,17 @@ import { Link, Outlet } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTheme } from "@/hooks/useTheme";
 import { Sun, Moon } from "lucide-react";
+import { Navbar } from "@/components/common/Navbar";
+import { Footer } from "@/components/common/Footer";
 
 export const AuthLayout = () => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background">
+      <Navbar />
+
+      <div className="flex flex-1">
       {/* Left panel — always dark branding */}
       <div className="hidden w-1/2 flex-col justify-between overflow-hidden bg-zinc-950 p-12 lg:flex relative">
         <div
@@ -55,29 +60,13 @@ export const AuthLayout = () => {
 
       {/* Right panel — form */}
       <div className="relative flex w-full flex-col items-center justify-center bg-background px-6 py-12 lg:w-1/2 lg:px-10">
-        {/* Theme toggle */}
-        <button
-          onClick={toggleTheme}
-          className="absolute top-6 right-6 flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:text-foreground transition-colors"
-          aria-label="Toggle theme"
-        >
-          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        </button>
-
         <div className="w-full max-w-sm">
-          {/* Mobile logo */}
-          <div className="mb-10 flex lg:hidden items-center justify-center gap-2">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground">
-                <div className="h-3.5 w-3.5 rounded-full bg-background" />
-              </div>
-              <span className="text-2xl font-bold tracking-tight text-foreground">FitnessFreak</span>
-            </Link>
-          </div>
-
           <Outlet />
         </div>
       </div>
+      </div>
+
+      <Footer />
     </div>
   );
 };

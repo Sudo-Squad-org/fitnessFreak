@@ -1,10 +1,18 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { ArrowRight, Zap } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export const HeroSection = () => {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    navigate(currentUser ? "/dashboard" : "/login");
+  };
+
   const stats = [
     { value: "12+", label: "Class types" },
     { value: "50+", label: "Expert trainers" },
@@ -62,11 +70,9 @@ export const HeroSection = () => {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row"
         >
-          <Button asChild size="lg" className="h-12 w-full rounded-full px-8 text-sm font-semibold sm:w-auto gap-2">
-            <Link to="/signup">
-              Get Started Free
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+          <Button size="lg" onClick={handleGetStarted} className="h-12 w-full rounded-full px-8 text-sm font-semibold sm:w-auto gap-2">
+            Get Started Free
+            <ArrowRight className="h-4 w-4" />
           </Button>
           <Button asChild variant="outline" size="lg" className="h-12 w-full rounded-full px-8 text-sm font-semibold sm:w-auto">
             <Link to="/classes">Browse Classes</Link>

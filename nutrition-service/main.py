@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, text
 from datetime import date, timedelta
 from typing import Optional, List
 
@@ -20,6 +20,14 @@ from seed_data import FOODS
 
 # Create tables
 Base.metadata.create_all(bind=engine)
+
+# Add columns introduced after initial schema (safe to run on every startup)
+with engine.connect() as conn:
+    conn.execute(text("""
+        ALTER TABLE nutrition_profiles
+        ADD COLUMN IF NOT EXISTS health_conditions VARCHAR;
+    """))
+    conn.commit()
 
 app = FastAPI(title="Nutrition Service")
 
@@ -60,12 +68,16 @@ def create_profile(
     if db.query(NutritionProfile).filter_by(user_id=user_id).first():
         raise HTTPException(400, "Profile already exists. Use PUT to update.")
 
+    body_dict = body.model_dump()
+    health_conditions = body_dict.pop("health_conditions", []) or []
+
     tdee = calculate_tdee(body.weight_kg, body.height_cm, body.age, body.gender, body.activity_level)
-    targets = calculate_targets(tdee, body.goal)
+    targets = calculate_targets(tdee, body.goal, health_conditions)
 
     profile = NutritionProfile(
         user_id=user_id,
-        **body.model_dump(),
+        **body_dict,
+        health_conditions=",".join(health_conditions) if health_conditions else None,
         tdee=tdee,
         **targets,
     )
@@ -97,15 +109,19 @@ def update_profile(
         raise HTTPException(404, "Profile not found.")
 
     update_data = body.model_dump(exclude_none=True)
+    health_conditions_list = update_data.pop("health_conditions", None)
     for key, val in update_data.items():
         setattr(profile, key, val)
+    if health_conditions_list is not None:
+        profile.health_conditions = ",".join(health_conditions_list) if health_conditions_list else None
 
     # Recalculate TDEE and targets with updated values
     tdee = calculate_tdee(
         profile.weight_kg, profile.height_cm,
         profile.age, profile.gender, profile.activity_level,
     )
-    targets = calculate_targets(tdee, profile.goal)
+    current_conditions = profile.health_conditions.split(",") if profile.health_conditions else []
+    targets = calculate_targets(tdee, profile.goal, current_conditions)
     profile.tdee = tdee
     profile.target_calories = targets["target_calories"]
     profile.target_protein_g = targets["target_protein_g"]

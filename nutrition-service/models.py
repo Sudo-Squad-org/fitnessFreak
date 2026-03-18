@@ -14,6 +14,7 @@ class NutritionProfile(Base):
     height_cm = Column(Float, nullable=False)
     activity_level = Column(String, nullable=False)  # sedentary | lightly_active | moderately_active | very_active | extra_active
     goal = Column(String, nullable=False)             # weight_loss | muscle_gain | maintain
+    health_conditions = Column(String, nullable=True) # comma-separated: diabetes,hypertension,...
     tdee = Column(Float, nullable=True)
     target_calories = Column(Float, nullable=True)
     target_protein_g = Column(Float, nullable=True)

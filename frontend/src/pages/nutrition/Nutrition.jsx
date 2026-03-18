@@ -11,7 +11,10 @@ import {
   Beef, Wheat, Droplets, Leaf, Settings2,
 } from "lucide-react";
 
-const todayStr = () => new Date().toISOString().split("T")[0];
+const todayStr = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
 
 const addDays = (dateStr, n) => {
   const d = new Date(dateStr + "T00:00:00");
@@ -123,7 +126,7 @@ export const Nutrition = () => {
               <ChevronLeft className="h-4 w-4" /> Back
             </button>
           )}
-          <ProfileSetup onComplete={handleProfileComplete} />
+          <ProfileSetup onComplete={handleProfileComplete} initialData={showEditProfile ? profile : null} />
         </main>
       </div>
     );
