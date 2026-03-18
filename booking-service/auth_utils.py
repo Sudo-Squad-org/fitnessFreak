@@ -9,22 +9,19 @@ bearer_scheme = HTTPBearer()
 
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
-    """
-    FastAPI dependency — validates the Bearer JWT token.
-    Returns the decoded payload (e.g. {"user_id": "..."}).
-    Raises 401 if the token is missing, expired or invalid.
-    """
+    """Validates Bearer JWT. Returns decoded payload."""
     try:
         payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGO])
-        user_id: str = payload.get("user_id")
-        if user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token: user_id missing",
-            )
+        if not payload.get("user_id"):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token: user_id missing")
         return payload
     except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+
+
+def require_admin(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+    """Validates Bearer JWT and enforces admin role."""
+    payload = verify_token(credentials)
+    if payload.get("role") != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    return payload

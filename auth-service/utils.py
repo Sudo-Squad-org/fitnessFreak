@@ -20,4 +20,6 @@ def verify(p, h):
 def create_token(data: dict) -> str:
     payload = data.copy()
     payload["exp"] = datetime.utcnow() + timedelta(hours=1)
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGO)
+    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGO)
+    # python-jose may return bytes in older versions
+    return token if isinstance(token, str) else token.decode("utf-8")

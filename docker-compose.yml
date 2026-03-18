@@ -42,6 +42,19 @@ services:
       interval: 2s
       retries: 10
 
+  nutrition-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: nutrition_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      retries: 10
+
   # Backend services
   auth-service:
     build: ./auth-service
@@ -67,6 +80,14 @@ services:
     ports:
       - "8003:8000"
 
+  nutrition-service:
+    build: ./nutrition-service
+    depends_on:
+      nutrition-db:
+        condition: service_healthy
+    ports:
+      - "8004:8000"
+
   # API Gateway
   gateway:
     build: ./api-gateway
@@ -74,6 +95,7 @@ services:
       - auth-service
       - booking-service
       - workout-service
+      - nutrition-service
     ports:
       - "8000:8000"
 
