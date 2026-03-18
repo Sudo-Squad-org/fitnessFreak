@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from database import Base, engine, SessionLocal
-from models import Class, Booking
+from model import Class, Booking
 
 app = FastAPI()
 Base.metadata.create_all(bind=engine)

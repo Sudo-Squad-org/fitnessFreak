@@ -4,3 +4,4 @@ psycopg2-binary
 sqlalchemy
 python-jose
 passlib[bcrypt]
+httpx

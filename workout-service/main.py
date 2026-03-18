@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import workouts
+from routes import workouts
 
 app = FastAPI()
 
