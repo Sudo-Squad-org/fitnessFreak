@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+
+  # Databases
+  auth-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth_db
+    ports:
+      - "5433:5432"
+
+  booking-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: booking_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+
+  workout-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: workout_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+
+  # Backend services
+  auth-service:
+    build: ./auth-service
+    depends_on: [auth-db]
+    ports:
+      - "8001:8000"
+
+  booking-service:
+    build: ./booking-service
+    depends_on: [booking-db]
+    ports:
+      - "8002:8000"
+
+  workout-service:
+    build: ./workout-service
+    depends_on: [workout-db]
+    ports:
+      - "8003:8000"
+
+  # API Gateway
+  gateway:
+    build: ./api-gateway
+    depends_on:
+      - auth-service
+      - booking-service
+      - workout-service
+    ports:
+      - "8000:8000"
+
+  # Frontend
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
