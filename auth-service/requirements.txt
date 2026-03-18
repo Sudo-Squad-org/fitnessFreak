@@ -4,3 +4,4 @@ psycopg2-binary
 sqlalchemy
 python-jose
 passlib[bcrypt]
+argon2_cffi
