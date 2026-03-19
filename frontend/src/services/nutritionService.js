@@ -16,6 +16,8 @@ export const nutritionService = {
     return api.get(`/nutrition/foods?${params.toString()}`);
   },
   getFood: (id) => api.get(`/nutrition/foods/${id}`),
+  getRecommendations: () => api.get("/nutrition/recommendations"),
+
 
   // ── Meal Logs ──────────────────────────────────────────────────────────────
   addLog: (data) => api.post("/nutrition/logs", { ...data, log_date: fmt(data.log_date) }),

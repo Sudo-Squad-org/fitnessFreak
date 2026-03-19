@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { nutritionService } from "@/services/nutritionService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ const GOAL_OPTIONS = [
   { value: "muscle_gain", label: "Build Muscle", desc: "Calorie surplus, extra protein", icon: "💪", color: "border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-500/5" },
 ];
 
+<<<<<<< Updated upstream
 const HEALTH_CONDITIONS = [
   { value: "diabetes", label: "Diabetes / High Blood Sugar", icon: "🩸", desc: "Lower carb targets, higher protein" },
   { value: "hypertension", label: "High Blood Pressure", icon: "❤️", desc: "Moderate calorie reduction" },
@@ -36,12 +37,18 @@ const steps = ["Personal Info", "Activity Level", "Your Goal", "Health Condition
 
 export const ProfileSetup = ({ onComplete, initialData }) => {
   const isEditing = !!initialData;
+=======
+const steps = ["Personal Info", "Activity Level", "Your Goal", "Food Preferences"];
+
+export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create" }) => {
+>>>>>>> Stashed changes
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
 
   const [form, setForm] = useState({
+<<<<<<< Updated upstream
     age: initialData?.age ?? "",
     gender: initialData?.gender ?? "male",
     weight_kg: initialData?.weight_kg ?? "",
@@ -51,10 +58,23 @@ export const ProfileSetup = ({ onComplete, initialData }) => {
     health_conditions: initialData?.health_conditions
       ? initialData.health_conditions.split(",").filter(Boolean)
       : [],
+=======
+    age: "",
+    gender: "male",
+    weight_kg: "",
+    height_cm: "",
+    activity_level: "moderately_active",
+    goal: "maintain",
+    diet_type: "veg",
+    likes: "",
+    dislikes: "",
+    allergies: "",
+>>>>>>> Stashed changes
   });
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
+<<<<<<< Updated upstream
   const toggleCondition = (value) => {
     setForm((f) => ({
       ...f,
@@ -63,6 +83,24 @@ export const ProfileSetup = ({ onComplete, initialData }) => {
         : [...f.health_conditions, value],
     }));
   };
+=======
+  useEffect(() => {
+    if (!initialProfile) return;
+
+    setForm({
+      age: initialProfile.age?.toString() || "",
+      gender: initialProfile.gender || "male",
+      weight_kg: initialProfile.weight_kg?.toString() || "",
+      height_cm: initialProfile.height_cm?.toString() || "",
+      activity_level: initialProfile.activity_level || "moderately_active",
+      goal: initialProfile.goal || "maintain",
+      diet_type: initialProfile.diet_type || "veg",
+      likes: Array.isArray(initialProfile.likes) ? initialProfile.likes.join(", ") : "",
+      dislikes: Array.isArray(initialProfile.dislikes) ? initialProfile.dislikes.join(", ") : "",
+      allergies: Array.isArray(initialProfile.allergies) ? initialProfile.allergies.join(", ") : "",
+    });
+  }, [initialProfile]);
+>>>>>>> Stashed changes
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -73,8 +111,22 @@ export const ProfileSetup = ({ onComplete, initialData }) => {
         age: parseInt(form.age),
         weight_kg: parseFloat(form.weight_kg),
         height_cm: parseFloat(form.height_cm),
+<<<<<<< Updated upstream
       };
       const res = isEditing
+=======
+        likes: form.likes
+          ? form.likes.split(",").map((x) => x.trim()).filter(Boolean)
+          : [],
+        dislikes: form.dislikes
+          ? form.dislikes.split(",").map((x) => x.trim()).filter(Boolean)
+          : [],
+        allergies: form.allergies
+          ? form.allergies.split(",").map((x) => x.trim()).filter(Boolean)
+          : [],
+      };
+      const res = mode === "edit"
+>>>>>>> Stashed changes
         ? await nutritionService.updateProfile(payload)
         : await nutritionService.createProfile(payload);
       setResult(res.data);
@@ -92,7 +144,11 @@ export const ProfileSetup = ({ onComplete, initialData }) => {
           <CheckCircle2 className="h-8 w-8 text-emerald-500" />
         </div>
         <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
+<<<<<<< Updated upstream
           {isEditing ? "Profile updated!" : "You're all set!"}
+=======
+          {mode === "edit" ? "Profile updated!" : "You're all set!"}
+>>>>>>> Stashed changes
         </h2>
         <p className="text-zinc-500 mb-8 max-w-sm">
           Your daily targets have been calculated using the Mifflin-St Jeor formula
@@ -251,6 +307,7 @@ export const ProfileSetup = ({ onComplete, initialData }) => {
           </div>
         )}
 
+<<<<<<< Updated upstream
         {/* Step 3: Health Conditions */}
         {step === 3 && (
           <div className="space-y-4">
@@ -291,6 +348,67 @@ export const ProfileSetup = ({ onComplete, initialData }) => {
             <p className="text-xs text-muted-foreground text-center pt-2">
               No conditions? Leave all unselected and continue.
             </p>
+=======
+        {/* Step 3: Food Recommendations */}
+        {step === 3 && (
+          <div className="space-y-6">
+            <div className="text-center mb-6">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
+                <Scale className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <h2 className="text-xl font-bold text-foreground">Food preferences</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                These help us personalize your recommendations
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Diet Type</Label>
+              <select
+                value={form.diet_type}
+                onChange={(e) => set("diet_type", e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <option value="veg">Veg</option>
+                <option value="vegan">Vegan</option>
+                <option value="non_veg">Non-Veg</option>
+                <option value="keto">Keto</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Foods you like</Label>
+              <Input
+                type="text"
+                placeholder="paneer, rice, chicken"
+                value={form.likes}
+                onChange={(e) => set("likes", e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Comma separated</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Foods you dislike</Label>
+              <Input
+                type="text"
+                placeholder="broccoli, mushroom"
+                value={form.dislikes}
+                onChange={(e) => set("dislikes", e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Comma separated</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Allergies</Label>
+              <Input
+                type="text"
+                placeholder="nuts, dairy, egg"
+                value={form.allergies}
+                onChange={(e) => set("allergies", e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Comma separated</p>
+            </div>
+>>>>>>> Stashed changes
           </div>
         )}
 
@@ -314,7 +432,7 @@ export const ProfileSetup = ({ onComplete, initialData }) => {
             </Button>
           ) : (
             <Button onClick={handleSubmit} className="flex-1 gap-2" disabled={loading}>
-              {loading ? "Calculating..." : "Calculate My Plan"}
+              {loading ? (mode === "edit" ? "Saving..." : "Calculating...") : (mode === "edit" ? "Save Changes" : "Calculate My Plan")}
               {!loading && <Flame className="h-4 w-4" />}
             </Button>
           )}

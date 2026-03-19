@@ -164,6 +164,45 @@ def get_food(
     return food
 
 
+@app.get("/nutrition/recommendations", response_model=List[FoodOut])
+def get_recommendations(
+    db: Session = Depends(get_db),
+    user=Depends(verify_token)
+):
+    profile = db.query(NutritionProfile).filter(
+        NutritionProfile.user_id == user["user_id"]
+    ).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    foods = db.query(Food).all()
+    recommendations = []
+    print("Get Recommendations...")
+    for food in foods:
+        score = 0
+        # Diet filter
+        if profile.diet_type and food.diet_type != profile.diet_type:
+            continue
+        # Allergy filter
+        if profile.allergies and any(a.lower() in (food.ingredients or "").lower() for a in profile.allergies):
+            continue
+        # Dislike filter
+        if profile.dislikes and any(d.lower() in food.name.lower() for d in profile.dislikes):
+            continue
+        # Likes boost
+        if profile.likes and any(l.lower() in food.name.lower() for l in profile.likes):
+            score += 5
+        # Goal scoring
+        if profile.goal == "muscle_gain" and "high_protein" in (food.tags or []):
+            score += 10
+        if profile.goal == "weight_loss" and food.calories < 400:
+            score += 10
+
+        recommendations.append((score, food))
+
+    recommendations.sort(key=lambda x: x[0], reverse=True)
+    return [food for score, food in recommendations[:10]]
+
 # ── Meal Logs ─────────────────────────────────────────────────────────────────
 
 @app.post("/nutrition/logs", response_model=MealLogOut, status_code=201)

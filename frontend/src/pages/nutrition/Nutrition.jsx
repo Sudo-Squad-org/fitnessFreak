@@ -39,6 +39,8 @@ export const Nutrition = () => {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [weeklySummary, setWeeklySummary] = useState(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
 
   // Seed foods on first load (idempotent — backend ignores if already seeded)
   useEffect(() => {
@@ -87,6 +89,26 @@ export const Nutrition = () => {
     }
   }, []);
 
+  // Load Recommendations
+  const loadRecommendations = useCallback(async () => {
+    setRecommendationsLoading(true);
+    try {
+      const res = await nutritionService.getRecommendations();
+      setRecommendations(res.data);
+    } catch (e) {
+      console.error("Recommendations error:", e);
+      setRecommendations([]);
+    } finally {
+      setRecommendationsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (profileState === "loaded") {
+      loadRecommendations();
+    }
+  }, [profileState, loadRecommendations]);
+
   useEffect(() => {
     if (profileState === "loaded") {
       loadSummary();
@@ -97,6 +119,7 @@ export const Nutrition = () => {
   const handleProfileComplete = () => {
     setShowEditProfile(false);
     loadProfile();
+    loadRecommendations();
   };
 
   const handleDateChange = (delta) => {
@@ -126,7 +149,15 @@ export const Nutrition = () => {
               <ChevronLeft className="h-4 w-4" /> Back
             </button>
           )}
+<<<<<<< Updated upstream
           <ProfileSetup onComplete={handleProfileComplete} initialData={showEditProfile ? profile : null} />
+=======
+          <ProfileSetup
+            onComplete={handleProfileComplete}
+            initialProfile={showEditProfile ? profile : null}
+            mode={showEditProfile ? "edit" : "create"}
+          />
+>>>>>>> Stashed changes
         </main>
       </div>
     );
@@ -278,6 +309,61 @@ export const Nutrition = () => {
                   )}
                 </FadeIn>
               )}
+
+              {/* Food Recommendations */}
+              <FadeIn delay={0.14}>
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="font-bold text-foreground text-sm">Recommended Foods</h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Personalized using your goal and food preferences
+                      </p>
+                    </div>
+                  </div>
+
+                  {recommendationsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : recommendations.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No recommendations available yet.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {recommendations.map((food) => (
+                        <div
+                          key={food.id}
+                          className="rounded-xl border border-border bg-background p-4"
+                        >
+                          <h4 className="font-semibold text-foreground">{food.name}</h4>
+
+                          <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+                            <p>Calories: {food.calories_per_100g ?? food.calories} kcal</p>
+                            <p>Protein: {food.protein_per_100g ?? food.protein}g</p>
+                            <p>Carbs: {food.carbs_per_100g ?? food.carbs}g</p>
+                            <p>Fat: {food.fat_per_100g ?? food.fat}g</p>
+                          </div>
+
+                          {food.tags?.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {food.tags.slice(0, 4).map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </FadeIn>
 
               {/* Meal sections */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

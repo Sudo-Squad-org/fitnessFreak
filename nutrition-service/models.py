@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Date, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Float, Date, DateTime, ForeignKey, Text, JSON
 from sqlalchemy.sql import func
 from database import Base
 
@@ -23,6 +23,12 @@ class NutritionProfile(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    # existing fields...
+    diet_type = Column(String, default="veg")          # veg / vegan / non_veg / keto
+    likes = Column(JSON, nullable=True)                # e.g., ["chicken", "paneer"]
+    dislikes = Column(JSON, nullable=True)             # e.g., ["broccoli"]
+    allergies = Column(JSON, nullable=True)            # e.g., ["nuts", "dairy"]
+
 
 class Food(Base):
     __tablename__ = "foods"
@@ -38,6 +44,10 @@ class Food(Base):
     serving_size_g = Column(Float, nullable=False, default=100.0)
     serving_label = Column(String, nullable=True)    # "1 cup", "1 roti", "1 egg"
     is_indian = Column(Integer, default=1)           # 1 = Indian food
+
+    diet_type = Column(String)          # veg / vegan / non_veg / keto
+    ingredients = Column(String)        # comma-separated list, e.g., "chicken, lettuce, olive oil"
+    tags = Column(JSON)                 # e.g., ["high_protein", "low_carb"]
 
 
 class MealLog(Base):

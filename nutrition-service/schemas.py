@@ -14,6 +14,11 @@ class ProfileCreate(BaseModel):
     goal: str = Field(..., pattern="^(weight_loss|muscle_gain|maintain)$")
     health_conditions: Optional[List[str]] = Field(default_factory=list)
 
+    diet_type: str = Field("veg", pattern="^(veg|vegan|non_veg|keto)$")
+    likes: Optional[List[str]] = []
+    dislikes: Optional[List[str]] = []
+    allergies: Optional[List[str]] = []
+
 
 class ProfileUpdate(BaseModel):
     age: Optional[int] = Field(None, ge=10, le=100)
@@ -23,6 +28,11 @@ class ProfileUpdate(BaseModel):
     activity_level: Optional[str] = Field(None, pattern="^(sedentary|lightly_active|moderately_active|very_active|extra_active)$")
     goal: Optional[str] = Field(None, pattern="^(weight_loss|muscle_gain|maintain)$")
     health_conditions: Optional[List[str]] = None
+
+    diet_type: Optional[str] = Field(None, pattern="^(veg|vegan|non_veg|keto)$")
+    likes: Optional[List[str]] = None
+    dislikes: Optional[List[str]] = None
+    allergies: Optional[List[str]] = None
 
 
 class ProfileOut(BaseModel):
@@ -43,6 +53,10 @@ class ProfileOut(BaseModel):
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 
+    diet_type: Optional[str]
+    likes: Optional[List[str]]
+    dislikes: Optional[List[str]]
+    allergies: Optional[List[str]]
     model_config = {"from_attributes": True}
 
 
@@ -60,6 +74,9 @@ class FoodOut(BaseModel):
     serving_size_g: float
     serving_label: Optional[str]
     is_indian: int
+    diet_type: Optional[str]
+    ingredients: Optional[str]
+    tags: Optional[List[str]]
 
     model_config = {"from_attributes": True}
 
