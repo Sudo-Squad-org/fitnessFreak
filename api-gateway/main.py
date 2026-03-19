@@ -15,6 +15,7 @@ app.add_middleware(
 
 AUTH = "http://auth-service:8000"
 BOOK = "http://booking-service:8000"
+WORKOUT = "http://workout-service:8000"
 NUTRITION = "http://nutrition-service:8000"
 
 
@@ -94,3 +95,15 @@ async def seed_proxy(request: Request):
 @app.api_route("/nutrition/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def nutrition_proxy(path: str, request: Request):
     return await _proxy(request, f"{NUTRITION}/nutrition/{path}", await _body(request))
+
+
+# ── Workouts ──────────────────────────────────────────────────────────────────
+
+@app.api_route("/workouts", methods=["GET", "POST"])
+async def workouts_root_proxy(request: Request):
+    return await _proxy(request, f"{WORKOUT}/workouts", await _body(request))
+
+
+@app.api_route("/workouts/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
+async def workouts_path_proxy(path: str, request: Request):
+    return await _proxy(request, f"{WORKOUT}/workouts/{path}", await _body(request))

@@ -149,15 +149,11 @@ export const Nutrition = () => {
               <ChevronLeft className="h-4 w-4" /> Back
             </button>
           )}
-<<<<<<< Updated upstream
-          <ProfileSetup onComplete={handleProfileComplete} initialData={showEditProfile ? profile : null} />
-=======
           <ProfileSetup
             onComplete={handleProfileComplete}
             initialProfile={showEditProfile ? profile : null}
             mode={showEditProfile ? "edit" : "create"}
           />
->>>>>>> Stashed changes
         </main>
       </div>
     );

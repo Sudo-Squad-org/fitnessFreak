@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { bookingService } from "@/services/bookingService";
 import { nutritionService } from "@/services/nutritionService";
+import { workoutService } from "@/services/workoutService";
 import { StatsSection } from "./components/StatsSection";
 import { BookingList } from "./components/BookingList";
 import { ClassCard } from "./components/ClassCard";
 import { FadeIn } from "@/components/common/FadeIn";
-import { Loader2, ArrowRight, Salad, Flame, Beef, Wheat, Droplets } from "lucide-react";
+import { Loader2, ArrowRight, Salad, Flame, Beef, Wheat, Droplets, Dumbbell, HeartPulse } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -18,6 +19,7 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [nutritionSummary, setNutritionSummary] = useState(null);
   const [nutritionProfile, setNutritionProfile] = useState(null);
+  const [workoutPlan, setWorkoutPlan] = useState(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -40,6 +42,16 @@ const Dashboard = () => {
           ]);
           setNutritionProfile(profileRes.data);
           setNutritionSummary(summaryRes.data);
+
+          const workoutPlanRes = await workoutService.getPlan({
+            goal: profileRes.data.goal,
+            activity_level: profileRes.data.activity_level,
+            age: profileRes.data.age,
+            health_conditions: profileRes.data.health_conditions
+              ? profileRes.data.health_conditions.split(",").filter(Boolean)
+              : [],
+          });
+          setWorkoutPlan(workoutPlanRes.data);
         } catch { /* no nutrition profile yet */ }
       } catch (err) {
         console.error("Dashboard fetch error:", err);
@@ -132,6 +144,77 @@ const Dashboard = () => {
                 <div className="flex items-center justify-center py-6 rounded-xl border border-dashed border-border">
                   <p className="text-sm text-muted-foreground">
                     Set up your nutrition profile to start tracking macros.
+                  </p>
+                </div>
+              )}
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={0.2}>
+            <div className="rounded-2xl border border-border bg-card p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center">
+                    <Dumbbell className="h-4 w-4 text-sky-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm text-foreground">Recommended Workout Plan</p>
+                    <p className="text-xs text-muted-foreground">
+                      {workoutPlan
+                        ? `${workoutPlan.recommended_intensity} intensity`
+                        : "Set up health conditions to personalize your plan"}
+                    </p>
+                  </div>
+                </div>
+                <Button asChild variant="link" size="sm" className="px-0 h-auto font-semibold gap-1">
+                  <Link to="/nutrition">
+                    {workoutPlan ? "Update profile" : "Get started"} <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </Button>
+              </div>
+
+              {workoutPlan ? (
+                <div className="space-y-4">
+                  <div className="rounded-xl bg-sky-50/70 dark:bg-sky-500/10 border border-sky-100 dark:border-sky-900 p-4">
+                    <p className="text-sm font-medium text-foreground">{workoutPlan.summary}</p>
+                    {workoutPlan.health_conditions?.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {workoutPlan.health_conditions.map((condition) => (
+                          <span key={condition} className="rounded-full bg-background px-2.5 py-1 text-xs text-muted-foreground border border-border">
+                            {condition.replaceAll("_", " ")}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {workoutPlan.weekly_plan?.slice(0, 4).map((item) => (
+                      <div key={item.day} className="rounded-xl border border-border p-4">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-semibold text-sm text-foreground">{item.title}</p>
+                          <span className="text-[11px] text-muted-foreground">{item.duration}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">{item.day}</p>
+                        <p className="text-sm text-muted-foreground mt-3">{item.details}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="rounded-xl border border-border p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <HeartPulse className="h-4 w-4 text-rose-500" />
+                      <p className="text-sm font-semibold text-foreground">Coach note</p>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {workoutPlan.coach_notes?.[0]}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center py-6 rounded-xl border border-dashed border-border">
+                  <p className="text-sm text-muted-foreground">
+                    Add health conditions in your nutrition profile to unlock a safer workout plan.
                   </p>
                 </div>
               )}

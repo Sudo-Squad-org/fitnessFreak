@@ -6,14 +6,14 @@ import { Label } from "@/components/ui/label";
 import { FadeIn } from "@/components/common/FadeIn";
 import {
   ChevronRight, ChevronLeft, Flame, Target,
-  Activity, User, CheckCircle2, Heart,
+  Activity, User, CheckCircle2, Heart, Scale,
 } from "lucide-react";
 
 const ACTIVITY_OPTIONS = [
   { value: "sedentary", label: "Sedentary", desc: "Desk job, little or no exercise" },
-  { value: "lightly_active", label: "Lightly Active", desc: "Light exercise 1–3 days/week" },
-  { value: "moderately_active", label: "Moderately Active", desc: "Moderate exercise 3–5 days/week" },
-  { value: "very_active", label: "Very Active", desc: "Hard exercise 6–7 days/week" },
+  { value: "lightly_active", label: "Lightly Active", desc: "Light exercise 1-3 days/week" },
+  { value: "moderately_active", label: "Moderately Active", desc: "Moderate exercise 3-5 days/week" },
+  { value: "very_active", label: "Very Active", desc: "Hard exercise 6-7 days/week" },
   { value: "extra_active", label: "Extra Active", desc: "Physical job or 2x training/day" },
 ];
 
@@ -23,67 +23,39 @@ const GOAL_OPTIONS = [
   { value: "muscle_gain", label: "Build Muscle", desc: "Calorie surplus, extra protein", icon: "💪", color: "border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-500/5" },
 ];
 
-<<<<<<< Updated upstream
 const HEALTH_CONDITIONS = [
-  { value: "diabetes", label: "Diabetes / High Blood Sugar", icon: "🩸", desc: "Lower carb targets, higher protein" },
-  { value: "hypertension", label: "High Blood Pressure", icon: "❤️", desc: "Moderate calorie reduction" },
-  { value: "high_cholesterol", label: "High Cholesterol", icon: "🫀", desc: "Reduced fat targets" },
-  { value: "hypothyroidism", label: "Thyroid (Hypothyroidism)", icon: "🦋", desc: "Adjusted for slower metabolism" },
-  { value: "pcos", label: "PCOS", icon: "🌸", desc: "Lower carb, higher protein approach" },
-  { value: "heart_disease", label: "Heart Disease", icon: "💓", desc: "Reduced calories and fat" },
+  { value: "diabetes", label: "Diabetes / High Blood Sugar", icon: "🩸", desc: "Steady cardio and lower-impact progression" },
+  { value: "hypertension", label: "High Blood Pressure", icon: "❤️", desc: "Moderate intensity and controlled breathing" },
+  { value: "high_cholesterol", label: "High Cholesterol", icon: "🫀", desc: "More heart-healthy cardio volume" },
+  { value: "hypothyroidism", label: "Hypothyroidism", icon: "🦋", desc: "Consistency-first plan with recovery in mind" },
+  { value: "pcos", label: "PCOS", icon: "🌸", desc: "Blend strength and steady cardio" },
+  { value: "heart_disease", label: "Heart Disease", icon: "💓", desc: "Low-impact, conservative workload" },
 ];
 
-const steps = ["Personal Info", "Activity Level", "Your Goal", "Health Conditions"];
-
-export const ProfileSetup = ({ onComplete, initialData }) => {
-  const isEditing = !!initialData;
-=======
-const steps = ["Personal Info", "Activity Level", "Your Goal", "Food Preferences"];
+const steps = ["Personal Info", "Activity Level", "Your Goal", "Health Conditions", "Food Preferences"];
 
 export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create" }) => {
->>>>>>> Stashed changes
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
 
   const [form, setForm] = useState({
-<<<<<<< Updated upstream
-    age: initialData?.age ?? "",
-    gender: initialData?.gender ?? "male",
-    weight_kg: initialData?.weight_kg ?? "",
-    height_cm: initialData?.height_cm ?? "",
-    activity_level: initialData?.activity_level ?? "moderately_active",
-    goal: initialData?.goal ?? "maintain",
-    health_conditions: initialData?.health_conditions
-      ? initialData.health_conditions.split(",").filter(Boolean)
-      : [],
-=======
     age: "",
     gender: "male",
     weight_kg: "",
     height_cm: "",
     activity_level: "moderately_active",
     goal: "maintain",
+    health_conditions: [],
     diet_type: "veg",
     likes: "",
     dislikes: "",
     allergies: "",
->>>>>>> Stashed changes
   });
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
-<<<<<<< Updated upstream
-  const toggleCondition = (value) => {
-    setForm((f) => ({
-      ...f,
-      health_conditions: f.health_conditions.includes(value)
-        ? f.health_conditions.filter((c) => c !== value)
-        : [...f.health_conditions, value],
-    }));
-  };
-=======
   useEffect(() => {
     if (!initialProfile) return;
 
@@ -94,13 +66,24 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
       height_cm: initialProfile.height_cm?.toString() || "",
       activity_level: initialProfile.activity_level || "moderately_active",
       goal: initialProfile.goal || "maintain",
+      health_conditions: initialProfile.health_conditions
+        ? initialProfile.health_conditions.split(",").filter(Boolean)
+        : [],
       diet_type: initialProfile.diet_type || "veg",
       likes: Array.isArray(initialProfile.likes) ? initialProfile.likes.join(", ") : "",
       dislikes: Array.isArray(initialProfile.dislikes) ? initialProfile.dislikes.join(", ") : "",
       allergies: Array.isArray(initialProfile.allergies) ? initialProfile.allergies.join(", ") : "",
     });
   }, [initialProfile]);
->>>>>>> Stashed changes
+
+  const toggleCondition = (value) => {
+    setForm((f) => ({
+      ...f,
+      health_conditions: f.health_conditions.includes(value)
+        ? f.health_conditions.filter((c) => c !== value)
+        : [...f.health_conditions, value],
+    }));
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -108,25 +91,15 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
     try {
       const payload = {
         ...form,
-        age: parseInt(form.age),
+        age: parseInt(form.age, 10),
         weight_kg: parseFloat(form.weight_kg),
         height_cm: parseFloat(form.height_cm),
-<<<<<<< Updated upstream
+        likes: form.likes ? form.likes.split(",").map((x) => x.trim()).filter(Boolean) : [],
+        dislikes: form.dislikes ? form.dislikes.split(",").map((x) => x.trim()).filter(Boolean) : [],
+        allergies: form.allergies ? form.allergies.split(",").map((x) => x.trim()).filter(Boolean) : [],
       };
-      const res = isEditing
-=======
-        likes: form.likes
-          ? form.likes.split(",").map((x) => x.trim()).filter(Boolean)
-          : [],
-        dislikes: form.dislikes
-          ? form.dislikes.split(",").map((x) => x.trim()).filter(Boolean)
-          : [],
-        allergies: form.allergies
-          ? form.allergies.split(",").map((x) => x.trim()).filter(Boolean)
-          : [],
-      };
+
       const res = mode === "edit"
->>>>>>> Stashed changes
         ? await nutritionService.updateProfile(payload)
         : await nutritionService.createProfile(payload);
       setResult(res.data);
@@ -144,15 +117,11 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
           <CheckCircle2 className="h-8 w-8 text-emerald-500" />
         </div>
         <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
-<<<<<<< Updated upstream
-          {isEditing ? "Profile updated!" : "You're all set!"}
-=======
           {mode === "edit" ? "Profile updated!" : "You're all set!"}
->>>>>>> Stashed changes
         </h2>
         <p className="text-zinc-500 mb-8 max-w-sm">
           Your daily targets have been calculated using the Mifflin-St Jeor formula
-          {form.health_conditions.length > 0 && ", adjusted for your health conditions"}.
+          {form.health_conditions.length > 0 ? ", with adjustments for your health conditions." : "."}
         </p>
 
         <div className="grid grid-cols-2 gap-4 w-full max-w-sm mb-8">
@@ -181,7 +150,6 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-      {/* Step indicator */}
       <div className="flex items-center gap-2 mb-10">
         {steps.map((s, i) => (
           <React.Fragment key={s}>
@@ -203,7 +171,6 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
       </div>
 
       <FadeIn key={step} className="w-full max-w-md">
-        {/* Step 0: Personal Info */}
         {step === 0 && (
           <div className="space-y-6">
             <div className="text-center mb-6">
@@ -245,7 +212,6 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
           </div>
         )}
 
-        {/* Step 1: Activity Level */}
         {step === 1 && (
           <div className="space-y-4">
             <div className="text-center mb-6">
@@ -272,7 +238,6 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
           </div>
         )}
 
-        {/* Step 2: Goal */}
         {step === 2 && (
           <div className="space-y-4">
             <div className="text-center mb-6">
@@ -307,8 +272,6 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
           </div>
         )}
 
-<<<<<<< Updated upstream
-        {/* Step 3: Health Conditions */}
         {step === 3 && (
           <div className="space-y-4">
             <div className="text-center mb-6">
@@ -317,7 +280,7 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
               </div>
               <h2 className="text-xl font-bold text-foreground">Any health conditions?</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Select all that apply — we'll adjust your targets accordingly
+                Select all that apply — we'll personalize both nutrition and workouts.
               </p>
             </div>
 
@@ -348,9 +311,10 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
             <p className="text-xs text-muted-foreground text-center pt-2">
               No conditions? Leave all unselected and continue.
             </p>
-=======
-        {/* Step 3: Food Recommendations */}
-        {step === 3 && (
+          </div>
+        )}
+
+        {step === 4 && (
           <div className="space-y-6">
             <div className="text-center mb-6">
               <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
@@ -378,37 +342,21 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
 
             <div className="space-y-2">
               <Label>Foods you like</Label>
-              <Input
-                type="text"
-                placeholder="paneer, rice, chicken"
-                value={form.likes}
-                onChange={(e) => set("likes", e.target.value)}
-              />
+              <Input type="text" placeholder="paneer, rice, chicken" value={form.likes} onChange={(e) => set("likes", e.target.value)} />
               <p className="text-xs text-muted-foreground">Comma separated</p>
             </div>
 
             <div className="space-y-2">
               <Label>Foods you dislike</Label>
-              <Input
-                type="text"
-                placeholder="broccoli, mushroom"
-                value={form.dislikes}
-                onChange={(e) => set("dislikes", e.target.value)}
-              />
+              <Input type="text" placeholder="broccoli, mushroom" value={form.dislikes} onChange={(e) => set("dislikes", e.target.value)} />
               <p className="text-xs text-muted-foreground">Comma separated</p>
             </div>
 
             <div className="space-y-2">
               <Label>Allergies</Label>
-              <Input
-                type="text"
-                placeholder="nuts, dairy, egg"
-                value={form.allergies}
-                onChange={(e) => set("allergies", e.target.value)}
-              />
+              <Input type="text" placeholder="nuts, dairy, egg" value={form.allergies} onChange={(e) => set("allergies", e.target.value)} />
               <p className="text-xs text-muted-foreground">Comma separated</p>
             </div>
->>>>>>> Stashed changes
           </div>
         )}
 
@@ -424,9 +372,7 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
             <Button
               onClick={() => setStep((s) => s + 1)}
               className="flex-1 gap-2"
-              disabled={
-                step === 0 && (!form.age || !form.weight_kg || !form.height_cm)
-              }
+              disabled={step === 0 && (!form.age || !form.weight_kg || !form.height_cm)}
             >
               Next <ChevronRight className="h-4 w-4" />
             </Button>
