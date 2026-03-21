@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from typing import Optional, List
 from datetime import datetime
 
@@ -16,6 +16,12 @@ class ClassCreate(BaseModel):
     max_seats: int
     available_seats: int
     status: str = "upcoming"
+
+    @model_validator(mode="after")
+    def check_available_seats(self):
+        if self.available_seats > self.max_seats:
+            raise ValueError("available_seats cannot exceed max_seats")
+        return self
 
 
 class ClassUpdate(BaseModel):

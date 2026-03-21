@@ -1,7 +1,13 @@
+import os
+import logging
+import httpx
 from fastapi import FastAPI, Depends, HTTPException, Query
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+logger = logging.getLogger("nutrition-service")
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from sqlalchemy import func, text
+from sqlalchemy import func
 from datetime import date, timedelta
 from typing import Optional, List
 
@@ -18,22 +24,17 @@ from auth_utils import verify_token, require_admin
 from utils import calculate_tdee, calculate_targets, compute_log_macros
 from seed_data import FOODS
 
-# Create tables
+# Create tables (Alembic manages schema changes; create_all handles initial setup)
 Base.metadata.create_all(bind=engine)
-
-# Add columns introduced after initial schema (safe to run on every startup)
-with engine.connect() as conn:
-    conn.execute(text("""
-        ALTER TABLE nutrition_profiles
-        ADD COLUMN IF NOT EXISTS health_conditions VARCHAR;
-    """))
-    conn.commit()
 
 app = FastAPI(title="Nutrition Service")
 
+_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
+ALLOWED_ORIGINS = [o.strip() for o in _origins_env.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -81,9 +82,13 @@ def create_profile(
         tdee=tdee,
         **targets,
     )
-    db.add(profile)
-    db.commit()
-    db.refresh(profile)
+    try:
+        db.add(profile)
+        db.commit()
+        db.refresh(profile)
+    except Exception:
+        db.rollback()
+        raise HTTPException(500, "Failed to create nutrition profile")
     return profile
 
 
@@ -128,8 +133,12 @@ def update_profile(
     profile.target_carbs_g = targets["target_carbs_g"]
     profile.target_fat_g = targets["target_fat_g"]
 
-    db.commit()
-    db.refresh(profile)
+    try:
+        db.commit()
+        db.refresh(profile)
+    except Exception:
+        db.rollback()
+        raise HTTPException(500, "Failed to update nutrition profile")
     return profile
 
 
@@ -175,33 +184,37 @@ def get_recommendations(
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-    foods = db.query(Food).all()
+    # SQL-level pre-filtering to avoid loading the entire food table into memory
+    query = db.query(Food)
+    if profile.diet_type:
+        query = query.filter(Food.diet_type == profile.diet_type)
+    if profile.goal == "weight_loss":
+        query = query.filter(Food.calories_per_100g < 400)
+
+    # Fetch a reasonable candidate set then score in Python
+    candidates = query.order_by(Food.id).limit(300).all()
+
     recommendations = []
-    print("Get Recommendations...")
-    for food in foods:
-        score = 0
-        # Diet filter
-        if profile.diet_type and food.diet_type != profile.diet_type:
-            continue
+    for food in candidates:
         # Allergy filter
-        if profile.allergies and any(a.lower() in (food.ingredients or "").lower() for a in profile.allergies):
+        if profile.allergies and any(
+            a.lower() in (food.ingredients or "").lower() for a in profile.allergies
+        ):
             continue
         # Dislike filter
         if profile.dislikes and any(d.lower() in food.name.lower() for d in profile.dislikes):
             continue
-        # Likes boost
+
+        score = 0
         if profile.likes and any(l.lower() in food.name.lower() for l in profile.likes):
             score += 5
-        # Goal scoring
         if profile.goal == "muscle_gain" and "high_protein" in (food.tags or []):
-            score += 10
-        if profile.goal == "weight_loss" and food.calories < 400:
             score += 10
 
         recommendations.append((score, food))
 
     recommendations.sort(key=lambda x: x[0], reverse=True)
-    return [food for score, food in recommendations[:10]]
+    return [food for _, food in recommendations[:10]]
 
 # ── Meal Logs ─────────────────────────────────────────────────────────────────
 
@@ -225,19 +238,41 @@ def add_meal_log(
         notes=body.notes,
         **macros,
     )
-    db.add(log)
-    db.commit()
-    db.refresh(log)
+    try:
+        db.add(log)
+        db.commit()
+        db.refresh(log)
+    except Exception:
+        db.rollback()
+        raise HTTPException(500, "Failed to save meal log")
 
-    # Attach food for response
     log.food = food
+
+    # Fire-and-forget: notify goals-service and progress-service
+    _emit_meal_event(payload["user_id"], log.log_date.isoformat(), log.calories)
+
     return log
+
+
+def _emit_meal_event(user_id: str, log_date: str, calories: float):
+    _secret = os.getenv("SECRET_KEY", "supersecretkey")
+    event = {"user_id": user_id, "event_type": "meal_logged", "value": 1, "date": log_date}
+    for url in [
+        "http://goals-service:8000/internal/goals/event",
+        "http://progress-service:8000/internal/progress/event",
+    ]:
+        try:
+            httpx.post(url, json=event, headers={"X-Internal-Secret": _secret}, timeout=2.0)
+        except Exception:
+            pass
 
 
 @app.get("/nutrition/logs", response_model=List[MealLogOut])
 def get_logs(
     log_date: Optional[date] = Query(None),
     meal_type: Optional[str] = Query(None),
+    limit: int = Query(50, le=200),
+    offset: int = Query(0),
     db: Session = Depends(get_db),
     payload: dict = Depends(verify_token),
 ):
@@ -247,7 +282,7 @@ def get_logs(
     if meal_type:
         query = query.filter(MealLog.meal_type == meal_type)
 
-    logs = query.order_by(MealLog.logged_at.desc()).all()
+    logs = query.order_by(MealLog.logged_at.desc()).offset(offset).limit(limit).all()
 
     # Eager-attach food objects
     food_ids = {l.food_id for l in logs}
@@ -267,8 +302,12 @@ def delete_log(
     log = db.query(MealLog).filter(MealLog.id == log_id, MealLog.user_id == payload["user_id"]).first()
     if not log:
         raise HTTPException(404, "Log not found.")
-    db.delete(log)
-    db.commit()
+    try:
+        db.delete(log)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(500, "Failed to delete meal log")
 
 
 # ── Daily Summary ─────────────────────────────────────────────────────────────

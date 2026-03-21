@@ -1,8 +1,9 @@
+import os
 import time
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = "postgresql://postgres:postgres@nutrition-db:5432/nutrition_db"
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@nutrition-db:5432/nutrition_db")
 
 Base = declarative_base()
 

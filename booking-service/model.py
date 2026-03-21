@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime, Text
+from sqlalchemy import Column, String, Integer, DateTime, Text, Index
 from sqlalchemy.sql import func
 from database import Base
 import uuid
@@ -39,8 +39,20 @@ class Booking(Base):
     __tablename__ = "bookings"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String, nullable=False)
-    class_id = Column(String, nullable=False)
+    user_id = Column(String, nullable=False, index=True)
+    class_id = Column(String, nullable=False, index=True)
     booked_at = Column(DateTime, server_default=func.now())
     status = Column(String, nullable=False, default="confirmed")
     # confirmed | cancelled
+
+
+class Waitlist(Base):
+    """Users who joined the waitlist for a fully-booked class."""
+    __tablename__ = "waitlist"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String, nullable=False, index=True)
+    class_id = Column(String, nullable=False, index=True)
+    joined_at = Column(DateTime, server_default=func.now())
+    status = Column(String, nullable=False, default="waiting")
+    # waiting | confirmed | cancelled

@@ -35,7 +35,7 @@ class Food(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False, index=True)
-    category = Column(String, nullable=False)        # grain | protein | dairy | vegetable | fruit | fat | beverage | snack
+    category = Column(String, nullable=False, index=True)        # grain | protein | dairy | vegetable | fruit | fat | beverage | snack
     calories_per_100g = Column(Float, nullable=False)
     protein_per_100g = Column(Float, nullable=False)
     carbs_per_100g = Column(Float, nullable=False)
@@ -63,6 +63,6 @@ class MealLog(Base):
     carbs_g = Column(Float, nullable=False)
     fat_g = Column(Float, nullable=False)
     fiber_g = Column(Float, nullable=True, default=0.0)
-    log_date = Column(Date, nullable=False)
+    log_date = Column(Date, nullable=False, index=True)
     logged_at = Column(DateTime(timezone=True), server_default=func.now())
     notes = Column(Text, nullable=True)

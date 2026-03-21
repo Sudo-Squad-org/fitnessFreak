@@ -1,16 +1,28 @@
+import logging
 from fastapi import FastAPI, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+logger = logging.getLogger("booking-service")
+from sqlalchemy import update
 from datetime import datetime, timedelta
 from typing import List, Optional
 import uuid
 
 from database import Base, engine, SessionLocal
-from model import Class, Booking
+from model import Class, Booking, Waitlist
 from schemas import ClassCreate, ClassOut, ClassUpdate
 from auth_utils import verify_token, require_admin
 
 app = FastAPI()
 Base.metadata.create_all(bind=engine)
+
+CANCELLATION_DEADLINE_MINUTES = 60  # cannot cancel within 60 min of class start
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "service": "booking-service"}
 
 
 def get_db():
@@ -116,8 +128,12 @@ def seed_classes(db: Session = Depends(get_db)):
               max_seats=25, available_seats=20, status="upcoming"),
     ]
 
-    db.add_all(samples)
-    db.commit()
+    try:
+        db.add_all(samples)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(500, "Seed failed")
     return {"message": f"Seeded {len(samples)} classes"}
 
 
@@ -130,6 +146,8 @@ def get_classes(
     class_type: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
+    limit: int = Query(20, le=100),
+    offset: int = Query(0),
     db: Session = Depends(get_db),
 ):
     query = db.query(Class)
@@ -146,7 +164,7 @@ def get_classes(
         query = query.filter(
             Class.title.ilike(term) | Class.instructor_name.ilike(term)
         )
-    return query.order_by(Class.schedule_time).all()
+    return query.order_by(Class.schedule_time).offset(offset).limit(limit).all()
 
 
 @app.get("/classes/{class_id}", response_model=ClassOut)
@@ -166,9 +184,13 @@ def create_class(
     payload=Depends(require_admin),
 ):
     cls = Class(id=str(uuid.uuid4()), **data.dict())
-    db.add(cls)
-    db.commit()
-    db.refresh(cls)
+    try:
+        db.add(cls)
+        db.commit()
+        db.refresh(cls)
+    except Exception:
+        db.rollback()
+        raise HTTPException(500, "Failed to create class")
     return cls
 
 
@@ -184,8 +206,12 @@ def update_class(
         raise HTTPException(404, "Class not found")
     for field, value in data.dict(exclude_unset=True).items():
         setattr(cls, field, value)
-    db.commit()
-    db.refresh(cls)
+    try:
+        db.commit()
+        db.refresh(cls)
+    except Exception:
+        db.rollback()
+        raise HTTPException(500, "Failed to update class")
     return cls
 
 
@@ -198,8 +224,12 @@ def delete_class(
     cls = db.query(Class).filter(Class.id == class_id).first()
     if not cls:
         raise HTTPException(404, "Class not found")
-    db.delete(cls)
-    db.commit()
+    try:
+        db.delete(cls)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(500, "Failed to delete class")
     return {"message": "Class deleted"}
 
 
@@ -242,15 +272,13 @@ def book(
     if not class_id:
         raise HTTPException(400, "classId is required")
 
-    cls = db.query(Class).filter(Class.id == class_id).with_for_update().first()
+    cls = db.query(Class).filter(Class.id == class_id).first()
     if not cls:
         raise HTTPException(404, "Class not found")
     if cls.status == "cancelled":
         raise HTTPException(400, "This class has been cancelled")
     if cls.status == "completed":
         raise HTTPException(400, "This class has already ended")
-    if cls.available_seats <= 0:
-        raise HTTPException(400, "No seats available for this class")
 
     existing = (
         db.query(Booking)
@@ -264,15 +292,55 @@ def book(
     if existing:
         raise HTTPException(400, "You have already booked this class")
 
-    cls.available_seats -= 1
+    # If no seats available — join waitlist instead
+    if cls.available_seats <= 0:
+        existing_wait = db.query(Waitlist).filter(
+            Waitlist.user_id == user_id,
+            Waitlist.class_id == class_id,
+            Waitlist.status == "waiting",
+        ).first()
+        if existing_wait:
+            raise HTTPException(400, "You are already on the waitlist for this class")
+        wl = Waitlist(id=str(uuid.uuid4()), user_id=user_id, class_id=class_id)
+        try:
+            db.add(wl)
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise HTTPException(500, "Failed to join waitlist")
+        return {"message": "Class is full. Added to waitlist.", "waitlist_id": wl.id}
+
+    # Atomic seat decrement — prevents race condition without needing row-level lock
+    result = db.execute(
+        update(Class)
+        .where(Class.id == class_id, Class.available_seats > 0)
+        .values(available_seats=Class.available_seats - 1)
+        .returning(Class.available_seats)
+    )
+    row = result.fetchone()
+    if row is None:
+        # Another request grabbed the last seat between our check and update
+        wl = Waitlist(id=str(uuid.uuid4()), user_id=user_id, class_id=class_id)
+        try:
+            db.add(wl)
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise HTTPException(500, "Booking failed")
+        return {"message": "Class just filled up. Added to waitlist.", "waitlist_id": wl.id}
+
     booking = Booking(
         id=str(uuid.uuid4()),
         user_id=user_id,
         class_id=class_id,
         status="confirmed",
     )
-    db.add(booking)
-    db.commit()
+    try:
+        db.add(booking)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(500, "Booking failed")
     return {"message": "Booked successfully", "booking_id": booking.id}
 
 
@@ -293,33 +361,69 @@ def cancel_booking(
     if booking.status == "cancelled":
         raise HTTPException(400, "Booking is already cancelled")
 
-    # Restore seat count
     cls = db.query(Class).filter(Class.id == booking.class_id).first()
+    if cls and cls.schedule_time:
+        deadline = cls.schedule_time - timedelta(minutes=CANCELLATION_DEADLINE_MINUTES)
+        if datetime.utcnow() >= deadline:
+            raise HTTPException(
+                400,
+                f"Cannot cancel within {CANCELLATION_DEADLINE_MINUTES} minutes of class start"
+            )
+
+    booking.status = "cancelled"
+
+    # Restore seat and check waitlist
     if cls and cls.status in ("upcoming", "live"):
         cls.available_seats = min(cls.available_seats + 1, cls.max_seats)
 
-    booking.status = "cancelled"
-    db.commit()
+        # Auto-confirm the next person on the waitlist
+        next_waiter = (
+            db.query(Waitlist)
+            .filter(Waitlist.class_id == cls.id, Waitlist.status == "waiting")
+            .order_by(Waitlist.joined_at)
+            .first()
+        )
+        if next_waiter:
+            next_waiter.status = "confirmed"
+            cls.available_seats -= 1  # seat goes to the waiter
+            new_booking = Booking(
+                id=str(uuid.uuid4()),
+                user_id=next_waiter.user_id,
+                class_id=cls.id,
+                status="confirmed",
+            )
+            db.add(new_booking)
+
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(500, "Cancellation failed")
     return {"message": "Booking cancelled successfully"}
 
 
 @app.get("/bookings/my")
 def get_my_bookings(
+    limit: int = Query(20, le=100),
+    offset: int = Query(0),
     db: Session = Depends(get_db),
     payload=Depends(verify_token),
 ):
     user_id = payload["user_id"]
-    bookings = (
-        db.query(Booking)
+
+    # Single JOIN query — eliminates N+1
+    rows = (
+        db.query(Booking, Class)
+        .join(Class, Booking.class_id == Class.id, isouter=True)
         .filter(Booking.user_id == user_id, Booking.status == "confirmed")
         .order_by(Booking.booked_at.desc())
+        .offset(offset)
+        .limit(limit)
         .all()
     )
 
-    enriched = []
-    for b in bookings:
-        cls = db.query(Class).filter(Class.id == b.class_id).first()
-        enriched.append({
+    return [
+        {
             "id": b.id,
             "user_id": b.user_id,
             "booked_at": b.booked_at,
@@ -338,6 +442,51 @@ def get_my_bookings(
                 "available_seats": cls.available_seats,
                 "status": cls.status,
             } if cls else None,
-        })
+        }
+        for b, cls in rows
+    ]
 
-    return enriched
+
+# ── Admin: cancel any booking ─────────────────────────────────────────────────
+
+@app.delete("/admin/bookings/{booking_id}")
+def admin_cancel_booking(
+    booking_id: str,
+    db: Session = Depends(get_db),
+    payload=Depends(require_admin),
+):
+    booking = db.query(Booking).filter(Booking.id == booking_id).first()
+    if not booking:
+        raise HTTPException(404, "Booking not found")
+    if booking.status == "cancelled":
+        raise HTTPException(400, "Booking is already cancelled")
+
+    booking.status = "cancelled"
+
+    cls = db.query(Class).filter(Class.id == booking.class_id).first()
+    if cls and cls.status in ("upcoming", "live"):
+        cls.available_seats = min(cls.available_seats + 1, cls.max_seats)
+
+        next_waiter = (
+            db.query(Waitlist)
+            .filter(Waitlist.class_id == cls.id, Waitlist.status == "waiting")
+            .order_by(Waitlist.joined_at)
+            .first()
+        )
+        if next_waiter:
+            next_waiter.status = "confirmed"
+            cls.available_seats -= 1
+            new_booking = Booking(
+                id=str(uuid.uuid4()),
+                user_id=next_waiter.user_id,
+                class_id=cls.id,
+                status="confirmed",
+            )
+            db.add(new_booking)
+
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(500, "Admin cancellation failed")
+    return {"message": "Booking cancelled by admin"}

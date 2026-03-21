@@ -114,10 +114,10 @@ ALTER TABLE users ADD COLUMN onboarding_step INTEGER DEFAULT 0;
 ---
 
 ### 1.2 Flexible Goals Architecture (`goals-service` — NEW)
-- [ ] Create `goals-service` (FastAPI + PostgreSQL)
-- [ ] Weekly flexible goals (e.g., "3–4 workouts/week" not rigid daily)
-- [ ] Auto-adjust goals based on actual user behavior
-- [ ] New frontend `/goals` page
+- [x] Create `goals-service` (FastAPI + PostgreSQL)
+- [x] Weekly flexible goals (e.g., "3–4 workouts/week" not rigid daily)
+- [x] Auto-adjust goals based on actual user behavior
+- [x] New frontend `/goals` page
 
 <details>
 <summary><strong>How to achieve this</strong></summary>
@@ -166,9 +166,9 @@ CREATE TABLE goal_logs (
 ---
 
 ### 1.3 Progress & Celebration System
-- [ ] Milestone badges (first workout, 7-day streak, 10 meals logged, etc.)
-- [ ] Weekly visual progress report card (shareable)
-- [ ] Body transformation timeline (weight/measurements over time)
+- [x] Milestone badges (first workout, 7-day streak, 10 meals logged, etc.)
+- [x] Weekly visual progress report card (shareable)
+- [x] Body transformation timeline (weight/measurements over time)
 
 <details>
 <summary><strong>How to achieve this</strong></summary>
@@ -215,9 +215,9 @@ CREATE TABLE body_measurements (
 ---
 
 ### 1.4 Smart Notifications
-- [ ] Configurable reminder system (not spammy)
-- [ ] Smart nudges ("You usually train Tuesdays — your class starts in 1hr")
-- [ ] Notification preferences in user profile
+- [x] Configurable reminder system (not spammy)
+- [x] In-app notification bell with badge count, mark-read, delete
+- [x] Notification preferences in user profile
 
 <details>
 <summary><strong>How to achieve this</strong></summary>
@@ -267,10 +267,10 @@ CREATE TABLE notifications (
 > Goal: Become the single health dashboard. Connect fitness, nutrition, sleep, and mood.
 
 ### 2.1 Sleep & Recovery Tracking (`health-service` — NEW)
-- [ ] Create `health-service` (FastAPI + PostgreSQL)
-- [ ] Manual sleep logging (duration, quality 1–5, notes)
-- [ ] Daily readiness score (sleep + mood + rest days input)
-- [ ] Recovery recommendations ("Low readiness → switch to mobility today")
+- [x] Create `health-service` (FastAPI + PostgreSQL)
+- [x] Manual sleep logging (duration, quality 1–5, notes)
+- [x] Daily readiness score (sleep + mood + rest days input)
+- [x] Recovery recommendations ("Low readiness → switch to mobility today")
 
 <details>
 <summary><strong>How to achieve this</strong></summary>
@@ -319,10 +319,10 @@ CREATE TABLE readiness_scores (
 ---
 
 ### 2.2 Mood & Mental Wellness Module
-- [ ] Daily mood check-in (emoji-based, 5-second interaction)
-- [ ] Stress level logging
-- [ ] Guided breathing exercises + meditation library (basic video/audio)
-- [ ] Weekly mood trend report
+- [x] Daily mood check-in (emoji-based, 5-second interaction)
+- [x] Stress level logging
+- [x] Guided breathing exercises + meditation library (basic video/audio)
+- [x] Weekly mood trend report
 
 <details>
 <summary><strong>How to achieve this</strong></summary>
@@ -361,10 +361,10 @@ CREATE TABLE mood_logs (
 ---
 
 ### 2.3 Integrated Health Dashboard Redesign
-- [ ] Redesign `/dashboard` as holistic health hub
-- [ ] Widget: fitness activity + nutrition macros + sleep quality + mood + readiness score
-- [ ] 7-day and 30-day trend views
-- [ ] AI cross-domain insight: "Your energy is highest after 7+ hrs sleep + strength training"
+- [x] Redesign `/dashboard` as holistic health hub
+- [x] Widget: fitness activity + nutrition macros + sleep quality + mood + readiness score
+- [x] 7-day and 30-day trend views
+- [x] AI cross-domain insight: "Your energy is highest after 7+ hrs sleep + strength training"
 
 <details>
 <summary><strong>How to achieve this</strong></summary>

@@ -1,6 +1,11 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import date, datetime
+
+ALLOWED_HEALTH_CONDITIONS = {
+    "diabetes", "hypertension", "high_cholesterol",
+    "hypothyroidism", "pcos", "heart_disease",
+}
 
 
 # ── Nutrition Profile ─────────────────────────────────────────────────────────
@@ -13,6 +18,15 @@ class ProfileCreate(BaseModel):
     activity_level: str = Field(..., pattern="^(sedentary|lightly_active|moderately_active|very_active|extra_active)$")
     goal: str = Field(..., pattern="^(weight_loss|muscle_gain|maintain)$")
     health_conditions: Optional[List[str]] = Field(default_factory=list)
+
+    @field_validator("health_conditions")
+    @classmethod
+    def validate_health_conditions(cls, v):
+        if v:
+            invalid = set(v) - ALLOWED_HEALTH_CONDITIONS
+            if invalid:
+                raise ValueError(f"Unknown health condition(s): {invalid}. Allowed: {ALLOWED_HEALTH_CONDITIONS}")
+        return v
 
     diet_type: str = Field("veg", pattern="^(veg|vegan|non_veg|keto)$")
     likes: Optional[List[str]] = []
@@ -28,6 +42,15 @@ class ProfileUpdate(BaseModel):
     activity_level: Optional[str] = Field(None, pattern="^(sedentary|lightly_active|moderately_active|very_active|extra_active)$")
     goal: Optional[str] = Field(None, pattern="^(weight_loss|muscle_gain|maintain)$")
     health_conditions: Optional[List[str]] = None
+
+    @field_validator("health_conditions")
+    @classmethod
+    def validate_health_conditions(cls, v):
+        if v:
+            invalid = set(v) - ALLOWED_HEALTH_CONDITIONS
+            if invalid:
+                raise ValueError(f"Unknown health condition(s): {invalid}. Allowed: {ALLOWED_HEALTH_CONDITIONS}")
+        return v
 
     diet_type: Optional[str] = Field(None, pattern="^(veg|vegan|non_veg|keto)$")
     likes: Optional[List[str]] = None

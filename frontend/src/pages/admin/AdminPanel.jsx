@@ -17,11 +17,7 @@ import {
 } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-const CATEGORIES = ["yoga","hiit","dance","boxing","strength","cardio","mindfulness","cycling","pilates","functional"];
-const DIFFICULTIES = ["beginner","intermediate","advanced"];
-const CLASS_TYPES = ["live_online","on_demand","in_person"];
-const STATUSES = ["upcoming","live","completed","cancelled"];
+import { CATEGORIES, DIFFICULTIES, CLASS_TYPES, STATUSES } from "@/constants";
 
 const DIFFICULTY_STYLES = {
   beginner:     "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",

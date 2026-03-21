@@ -5,16 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FadeIn } from "@/components/common/FadeIn";
 import {
-  ChevronRight, ChevronLeft, Flame, Target,
-  Activity, User, CheckCircle2, Heart, Scale,
+  ChevronRight, ChevronLeft, ChevronDown, Flame, Target,
+  Activity, User, CheckCircle2, Heart, Utensils,
 } from "lucide-react";
 
 const ACTIVITY_OPTIONS = [
   { value: "sedentary", label: "Sedentary", desc: "Desk job, little or no exercise" },
-  { value: "lightly_active", label: "Lightly Active", desc: "Light exercise 1-3 days/week" },
-  { value: "moderately_active", label: "Moderately Active", desc: "Moderate exercise 3-5 days/week" },
-  { value: "very_active", label: "Very Active", desc: "Hard exercise 6-7 days/week" },
-  { value: "extra_active", label: "Extra Active", desc: "Physical job or 2x training/day" },
+  { value: "lightly_active", label: "Lightly Active", desc: "Light exercise 1–3 days/week" },
+  { value: "moderately_active", label: "Moderately Active", desc: "Moderate exercise 3–5 days/week" },
+  { value: "very_active", label: "Very Active", desc: "Hard exercise 6–7 days/week" },
+  { value: "extra_active", label: "Extra Active", desc: "Physical job or 2× training/day" },
 ];
 
 const GOAL_OPTIONS = [
@@ -33,6 +33,19 @@ const HEALTH_CONDITIONS = [
 ];
 
 const steps = ["Personal Info", "Activity Level", "Your Goal", "Health Conditions", "Food Preferences"];
+
+const SelectField = ({ value, onChange, children }) => (
+  <div className="relative">
+    <select
+      value={value}
+      onChange={onChange}
+      className="flex h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+    >
+      {children}
+    </select>
+    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+  </div>
+);
 
 export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create" }) => {
   const [step, setStep] = useState(0);
@@ -58,7 +71,6 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
 
   useEffect(() => {
     if (!initialProfile) return;
-
     setForm({
       age: initialProfile.age?.toString() || "",
       gender: initialProfile.gender || "male",
@@ -98,7 +110,6 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
         dislikes: form.dislikes ? form.dislikes.split(",").map((x) => x.trim()).filter(Boolean) : [],
         allergies: form.allergies ? form.allergies.split(",").map((x) => x.trim()).filter(Boolean) : [],
       };
-
       const res = mode === "edit"
         ? await nutritionService.updateProfile(payload)
         : await nutritionService.createProfile(payload);
@@ -110,37 +121,39 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
     }
   };
 
+  // ── Success screen ────────────────────────────────────────────────────────
   if (result) {
     return (
       <FadeIn className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center mb-6">
-          <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+        <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center mb-5">
+          <CheckCircle2 className="h-7 w-7 text-emerald-500" />
         </div>
-        <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
+        <h2 className="text-2xl font-bold text-foreground mb-2">
           {mode === "edit" ? "Profile updated!" : "You're all set!"}
         </h2>
-        <p className="text-zinc-500 mb-8 max-w-sm">
-          Your daily targets have been calculated using the Mifflin-St Jeor formula
+        <p className="text-sm text-muted-foreground mb-8 max-w-sm leading-relaxed">
+          Your daily targets were calculated using the Mifflin-St Jeor formula
           {form.health_conditions.length > 0 ? ", with adjustments for your health conditions." : "."}
         </p>
 
-        <div className="grid grid-cols-2 gap-4 w-full max-w-sm mb-8">
+        <div className="grid grid-cols-2 gap-3 w-full max-w-xs mb-6">
           {[
-            { label: "Daily Calories", value: `${Math.round(result.target_calories)} kcal`, color: "text-indigo-600 dark:text-indigo-400" },
-            { label: "Protein", value: `${Math.round(result.target_protein_g)}g`, color: "text-emerald-600 dark:text-emerald-400" },
-            { label: "Carbs", value: `${Math.round(result.target_carbs_g)}g`, color: "text-amber-600 dark:text-amber-400" },
-            { label: "Fat", value: `${Math.round(result.target_fat_g)}g`, color: "text-rose-600 dark:text-rose-400" },
+            { label: "Calories", value: Math.round(result.target_calories), unit: "kcal", color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-500/10" },
+            { label: "Protein",  value: Math.round(result.target_protein_g), unit: "g",    color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-500/10" },
+            { label: "Carbs",    value: Math.round(result.target_carbs_g),   unit: "g",    color: "text-amber-600 dark:text-amber-400",   bg: "bg-amber-50 dark:bg-amber-500/10" },
+            { label: "Fat",      value: Math.round(result.target_fat_g),     unit: "g",    color: "text-rose-600 dark:text-rose-400",     bg: "bg-rose-50 dark:bg-rose-500/10" },
           ].map((item) => (
-            <div key={item.label} className="rounded-xl border border-border bg-card p-4 text-left">
-              <p className="text-xs text-muted-foreground mb-1">{item.label}</p>
-              <p className={`text-2xl font-bold ${item.color}`}>{item.value}</p>
+            <div key={item.label} className={`rounded-2xl border border-border ${item.bg} p-4 text-left`}>
+              <p className="text-xs text-muted-foreground mb-1.5">{item.label}</p>
+              <div className="flex items-baseline gap-1">
+                <span className={`text-2xl font-bold ${item.color}`}>{item.value}</span>
+                <span className="text-xs text-muted-foreground">{item.unit}</span>
+              </div>
             </div>
           ))}
         </div>
 
-        <p className="text-sm text-zinc-400 mb-6">
-          TDEE: {Math.round(result.tdee)} kcal/day
-        </p>
+        <p className="text-xs text-muted-foreground mb-6">TDEE: {Math.round(result.tdee)} kcal/day</p>
         <Button onClick={onComplete} size="lg" className="rounded-full px-10">
           Start Tracking
         </Button>
@@ -148,34 +161,33 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
     );
   }
 
+  // ── Step form ─────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-      <div className="flex items-center gap-2 mb-10">
-        {steps.map((s, i) => (
-          <React.Fragment key={s}>
-            <div className="flex items-center gap-2">
-              <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                i < step ? "bg-foreground text-background" :
-                i === step ? "bg-foreground text-background ring-2 ring-offset-2 ring-foreground ring-offset-background" :
-                "bg-muted text-muted-foreground"
-              }`}>
-                {i < step ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
-              </div>
-              <span className={`hidden sm:inline text-sm font-medium ${i === step ? "text-foreground" : "text-muted-foreground"}`}>
-                {s}
-              </span>
-            </div>
-            {i < steps.length - 1 && <div className="w-8 h-px bg-border" />}
-          </React.Fragment>
-        ))}
+    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-8">
+      {/* Progress bar */}
+      <div className="w-full max-w-xl mb-8">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-muted-foreground font-medium">
+            Step {step + 1} of {steps.length}
+          </span>
+          <span className="text-xs font-semibold text-foreground">{steps[step]}</span>
+        </div>
+        <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+          <div
+            className="h-full bg-foreground rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${((step + 1) / steps.length) * 100}%` }}
+          />
+        </div>
       </div>
 
-      <FadeIn key={step} className="w-full max-w-md">
+      <FadeIn key={step} className="w-full max-w-xl">
+
+        {/* ── Step 0: Personal Info ─────────────────────────── */}
         {step === 0 && (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
-                <User className="h-6 w-6 text-muted-foreground" />
+          <div className="space-y-5">
+            <div className="text-center mb-8">
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-muted mb-4">
+                <User className="h-5 w-5 text-muted-foreground" />
               </div>
               <h2 className="text-xl font-bold text-foreground">Tell us about yourself</h2>
               <p className="text-sm text-muted-foreground mt-1">We'll use this to calculate your daily targets</p>
@@ -188,61 +200,74 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
               </div>
               <div className="space-y-2">
                 <Label>Gender</Label>
-                <select
-                  value={form.gender}
-                  onChange={(e) => set("gender", e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                >
+                <SelectField value={form.gender} onChange={(e) => set("gender", e.target.value)}>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
-                </select>
+                </SelectField>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Weight (kg)</Label>
+                <Label>
+                  Weight{" "}
+                  <span className="text-muted-foreground font-normal">(kg)</span>
+                </Label>
                 <Input type="number" placeholder="70" value={form.weight_kg} onChange={(e) => set("weight_kg", e.target.value)} min="20" max="300" />
               </div>
               <div className="space-y-2">
-                <Label>Height (cm)</Label>
+                <Label>
+                  Height{" "}
+                  <span className="text-muted-foreground font-normal">(cm)</span>
+                </Label>
                 <Input type="number" placeholder="175" value={form.height_cm} onChange={(e) => set("height_cm", e.target.value)} min="100" max="250" />
               </div>
             </div>
           </div>
         )}
 
+        {/* ── Step 1: Activity Level ────────────────────────── */}
         {step === 1 && (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
-                <Activity className="h-6 w-6 text-muted-foreground" />
+          <div className="space-y-3">
+            <div className="text-center mb-8">
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-muted mb-4">
+                <Activity className="h-5 w-5 text-muted-foreground" />
               </div>
               <h2 className="text-xl font-bold text-foreground">How active are you?</h2>
-              <p className="text-sm text-muted-foreground mt-1">Be honest — this affects your calorie needs</p>
+              <p className="text-sm text-muted-foreground mt-1">Be honest — this directly affects your calorie targets</p>
             </div>
             {ACTIVITY_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => set("activity_level", opt.value)}
-                className={`w-full text-left rounded-xl border p-4 transition-all ${
+                className={`w-full text-left rounded-xl border px-4 py-3.5 transition-all flex items-center justify-between gap-3 ${
                   form.activity_level === opt.value
                     ? "border-foreground bg-muted"
-                    : "border-border hover:border-foreground/30 hover:bg-muted/50"
+                    : "border-border hover:border-foreground/30 hover:bg-muted/40"
                 }`}
               >
-                <p className="font-semibold text-sm text-foreground">{opt.label}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{opt.desc}</p>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm text-foreground">{opt.label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{opt.desc}</p>
+                </div>
+                <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                  form.activity_level === opt.value ? "border-foreground" : "border-muted-foreground/30"
+                }`}>
+                  {form.activity_level === opt.value && (
+                    <div className="h-2 w-2 rounded-full bg-foreground" />
+                  )}
+                </div>
               </button>
             ))}
           </div>
         )}
 
+        {/* ── Step 2: Goal ─────────────────────────────────── */}
         {step === 2 && (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
-                <Target className="h-6 w-6 text-muted-foreground" />
+          <div className="space-y-3">
+            <div className="text-center mb-8">
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-muted mb-4">
+                <Target className="h-5 w-5 text-muted-foreground" />
               </div>
               <h2 className="text-xl font-bold text-foreground">What's your goal?</h2>
               <p className="text-sm text-muted-foreground mt-1">We'll adjust your macro targets accordingly</p>
@@ -251,7 +276,7 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
               <button
                 key={opt.value}
                 onClick={() => set("goal", opt.value)}
-                className={`w-full text-left rounded-xl border-2 p-5 transition-all ${
+                className={`w-full text-left rounded-xl border-2 p-4 transition-all ${
                   form.goal === opt.value
                     ? `${opt.color} border-opacity-100`
                     : "border-border hover:border-foreground/20"
@@ -259,12 +284,12 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
               >
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{opt.icon}</span>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="font-bold text-foreground">{opt.label}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{opt.desc}</p>
                   </div>
                   {form.goal === opt.value && (
-                    <CheckCircle2 className="h-5 w-5 text-foreground ml-auto" />
+                    <CheckCircle2 className="h-5 w-5 text-foreground shrink-0" />
                   )}
                 </div>
               </button>
@@ -272,15 +297,16 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
           </div>
         )}
 
+        {/* ── Step 3: Health Conditions ─────────────────────── */}
         {step === 3 && (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
-                <Heart className="h-6 w-6 text-muted-foreground" />
+          <div className="space-y-3">
+            <div className="text-center mb-8">
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-muted mb-4">
+                <Heart className="h-5 w-5 text-muted-foreground" />
               </div>
               <h2 className="text-xl font-bold text-foreground">Any health conditions?</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Select all that apply — we'll personalize both nutrition and workouts.
+                Select all that apply — we'll personalize nutrition and workouts.
               </p>
             </div>
 
@@ -297,8 +323,8 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">{cond.icon}</span>
-                    <div className="flex-1">
+                    <span className="text-xl shrink-0">{cond.icon}</span>
+                    <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm text-foreground">{cond.label}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">{cond.desc}</p>
                     </div>
@@ -308,55 +334,51 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
               );
             })}
 
-            <p className="text-xs text-muted-foreground text-center pt-2">
+            <p className="text-xs text-muted-foreground text-center pt-1">
               No conditions? Leave all unselected and continue.
             </p>
           </div>
         )}
 
+        {/* ── Step 4: Food Preferences ──────────────────────── */}
         {step === 4 && (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
-                <Scale className="h-6 w-6 text-muted-foreground" />
+          <div className="space-y-5">
+            <div className="text-center mb-8">
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-muted mb-4">
+                <Utensils className="h-5 w-5 text-muted-foreground" />
               </div>
               <h2 className="text-xl font-bold text-foreground">Food preferences</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                These help us personalize your recommendations
+                These help us personalize your meal recommendations
               </p>
             </div>
 
             <div className="space-y-2">
               <Label>Diet Type</Label>
-              <select
-                value={form.diet_type}
-                onChange={(e) => set("diet_type", e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              >
-                <option value="veg">Veg</option>
+              <SelectField value={form.diet_type} onChange={(e) => set("diet_type", e.target.value)}>
+                <option value="veg">Vegetarian</option>
                 <option value="vegan">Vegan</option>
-                <option value="non_veg">Non-Veg</option>
+                <option value="non_veg">Non-Vegetarian</option>
                 <option value="keto">Keto</option>
-              </select>
+              </SelectField>
             </div>
 
-            <div className="space-y-2">
-              <Label>Foods you like</Label>
-              <Input type="text" placeholder="paneer, rice, chicken" value={form.likes} onChange={(e) => set("likes", e.target.value)} />
-              <p className="text-xs text-muted-foreground">Comma separated</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Foods you dislike</Label>
-              <Input type="text" placeholder="broccoli, mushroom" value={form.dislikes} onChange={(e) => set("dislikes", e.target.value)} />
-              <p className="text-xs text-muted-foreground">Comma separated</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Allergies</Label>
-              <Input type="text" placeholder="nuts, dairy, egg" value={form.allergies} onChange={(e) => set("allergies", e.target.value)} />
-              <p className="text-xs text-muted-foreground">Comma separated</p>
-            </div>
+            {[
+              { key: "likes",     label: "Foods you like",    placeholder: "paneer, rice, chicken" },
+              { key: "dislikes",  label: "Foods you dislike", placeholder: "broccoli, mushroom" },
+              { key: "allergies", label: "Allergies",         placeholder: "nuts, dairy, egg" },
+            ].map((field) => (
+              <div key={field.key} className="space-y-2">
+                <Label>{field.label}</Label>
+                <Input
+                  type="text"
+                  placeholder={field.placeholder}
+                  value={form[field.key]}
+                  onChange={(e) => set(field.key, e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">Separate with commas</p>
+              </div>
+            ))}
           </div>
         )}
 
@@ -374,11 +396,13 @@ export const ProfileSetup = ({ onComplete, initialProfile = null, mode = "create
               className="flex-1 gap-2"
               disabled={step === 0 && (!form.age || !form.weight_kg || !form.height_cm)}
             >
-              Next <ChevronRight className="h-4 w-4" />
+              Continue <ChevronRight className="h-4 w-4" />
             </Button>
           ) : (
             <Button onClick={handleSubmit} className="flex-1 gap-2" disabled={loading}>
-              {loading ? (mode === "edit" ? "Saving..." : "Calculating...") : (mode === "edit" ? "Save Changes" : "Calculate My Plan")}
+              {loading
+                ? (mode === "edit" ? "Saving..." : "Calculating...")
+                : (mode === "edit" ? "Save Changes" : "Calculate My Plan")}
               {!loading && <Flame className="h-4 w-4" />}
             </Button>
           )}

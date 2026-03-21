@@ -35,18 +35,14 @@ export const StatsSection = ({ bookingsCount }) => {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6 mt-8">
       {stats.map((stat, i) => (
         <FadeIn key={i} delay={0.1 * i} yOffset={10}>
-          <Card className="border-none shadow-sm dark:bg-zinc-900/50">
+          <Card className="border border-border shadow-none bg-card">
             <CardContent className="flex items-center gap-4 p-6">
               <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${stat.bg}`}>
                 <stat.icon className={`h-6 w-6 ${stat.color}`} />
               </div>
               <div>
-                <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                  {stat.title}
-                </p>
-                <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-                  {stat.value}
-                </h3>
+                <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                <h3 className="text-2xl font-bold text-foreground">{stat.value}</h3>
               </div>
             </CardContent>
           </Card>

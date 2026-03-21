@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
-import { LogOut, Shield, Sun, Moon, Menu, X, Dumbbell, Salad } from "lucide-react";
+import { LogOut, Shield, Sun, Moon, Menu, X, Salad, Target, TrendingUp, Dumbbell, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "./NotificationBell";
 
 export const Navbar = () => {
   const { currentUser, logout, isAdmin } = useAuth();
@@ -44,9 +45,33 @@ export const Navbar = () => {
           <Link to="/classes" className={navLinkClass("/classes")}>Classes</Link>
           {currentUser && <Link to="/dashboard" className={navLinkClass("/dashboard")}>Dashboard</Link>}
           {currentUser && (
+            <Link to="/workouts" className={`flex items-center gap-1.5 text-sm font-medium transition-colors duration-150 ${isActive("/workouts") ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              <Dumbbell className="h-3.5 w-3.5" />
+              Workouts
+            </Link>
+          )}
+          {currentUser && (
+            <Link to="/wellness" className={`flex items-center gap-1.5 text-sm font-medium transition-colors duration-150 ${isActive("/wellness") ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              <Heart className="h-3.5 w-3.5" />
+              Wellness
+            </Link>
+          )}
+          {currentUser && (
             <Link to="/nutrition" className={`flex items-center gap-1.5 text-sm font-medium transition-colors duration-150 ${isActive("/nutrition") ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
               <Salad className="h-3.5 w-3.5" />
               Nutrition
+            </Link>
+          )}
+          {currentUser && (
+            <Link to="/goals" className={`flex items-center gap-1.5 text-sm font-medium transition-colors duration-150 ${isActive("/goals") ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              <Target className="h-3.5 w-3.5" />
+              Goals
+            </Link>
+          )}
+          {currentUser && (
+            <Link to="/progress" className={`flex items-center gap-1.5 text-sm font-medium transition-colors duration-150 ${isActive("/progress") ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              <TrendingUp className="h-3.5 w-3.5" />
+              Progress
             </Link>
           )}
           {isAdmin && (
@@ -75,12 +100,21 @@ export const Navbar = () => {
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
 
+          {/* Notification bell */}
+          {currentUser && <NotificationBell />}
+
           {currentUser ? (
-            <div className="hidden md:flex items-center gap-3">
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                {isAdmin && <Shield className="h-3.5 w-3.5 text-indigo-500" />}
-                <span className="font-medium text-foreground">{currentUser?.user?.name}</span>
-              </div>
+            <div className="hidden md:flex items-center gap-2">
+              {/* Profile avatar button */}
+              <Link
+                to="/profile"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground text-background text-xs font-bold hover:opacity-80 transition-opacity shrink-0"
+                title={currentUser?.user?.name}
+              >
+                {currentUser?.user?.name
+                  ? currentUser.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+                  : "?"}
+              </Link>
               <Button
                 variant="ghost"
                 size="sm"
@@ -121,7 +155,12 @@ export const Navbar = () => {
               { to: "/", label: "Home" },
               { to: "/classes", label: "Classes" },
               ...(currentUser ? [{ to: "/dashboard", label: "Dashboard" }] : []),
+              ...(currentUser ? [{ to: "/workouts", label: "Workouts", icon: Dumbbell }] : []),
+              ...(currentUser ? [{ to: "/wellness", label: "Wellness", icon: Heart }] : []),
               ...(currentUser ? [{ to: "/nutrition", label: "Nutrition", icon: Salad }] : []),
+              ...(currentUser ? [{ to: "/goals", label: "Goals", icon: Target }] : []),
+              ...(currentUser ? [{ to: "/progress", label: "Progress", icon: TrendingUp }] : []),
+              ...(currentUser ? [{ to: "/profile", label: "Profile" }] : []),
               ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: Shield }] : []),
             ].map(({ to, label, icon: Icon }) => (
               <Link

@@ -200,10 +200,10 @@ export const Nutrition = () => {
 
           {/* Date Navigation */}
           <FadeIn delay={0.05}>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3">
               <button
                 onClick={() => handleDateChange(-1)}
-                className="h-9 w-9 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -214,7 +214,7 @@ export const Nutrition = () => {
               <button
                 onClick={() => handleDateChange(1)}
                 disabled={selectedDate >= todayStr()}
-                className="h-9 w-9 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -323,32 +323,29 @@ export const Nutrition = () => {
                       <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                     </div>
                   ) : recommendations.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      No recommendations available yet.
-                    </p>
+                    <p className="text-sm text-muted-foreground">No recommendations available yet.</p>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                       {recommendations.map((food) => (
-                        <div
-                          key={food.id}
-                          className="rounded-xl border border-border bg-background p-4"
-                        >
-                          <h4 className="font-semibold text-foreground">{food.name}</h4>
-
-                          <div className="mt-3 space-y-1 text-sm text-muted-foreground">
-                            <p>Calories: {food.calories_per_100g ?? food.calories} kcal</p>
-                            <p>Protein: {food.protein_per_100g ?? food.protein}g</p>
-                            <p>Carbs: {food.carbs_per_100g ?? food.carbs}g</p>
-                            <p>Fat: {food.fat_per_100g ?? food.fat}g</p>
+                        <div key={food.id} className="rounded-xl border border-border bg-background p-4 space-y-3">
+                          <h4 className="font-semibold text-sm text-foreground leading-tight">{food.name}</h4>
+                          <div className="grid grid-cols-4 gap-2 text-center">
+                            {[
+                              { label: "Cal",  value: food.calories_per_100g ?? food.calories, unit: "kcal", color: "text-indigo-500" },
+                              { label: "Pro",  value: food.protein_per_100g  ?? food.protein,  unit: "g",    color: "text-emerald-500" },
+                              { label: "Carb", value: food.carbs_per_100g   ?? food.carbs,    unit: "g",    color: "text-amber-500" },
+                              { label: "Fat",  value: food.fat_per_100g     ?? food.fat,      unit: "g",    color: "text-rose-500" },
+                            ].map((m) => (
+                              <div key={m.label}>
+                                <p className={`text-sm font-bold ${m.color}`}>{m.value}</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">{m.label}</p>
+                              </div>
+                            ))}
                           </div>
-
                           {food.tags?.length > 0 && (
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {food.tags.slice(0, 4).map((tag) => (
-                                <span
-                                  key={tag}
-                                  className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground"
-                                >
+                            <div className="flex flex-wrap gap-1.5">
+                              {food.tags.slice(0, 3).map((tag) => (
+                                <span key={tag} className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
                                   {tag}
                                 </span>
                               ))}

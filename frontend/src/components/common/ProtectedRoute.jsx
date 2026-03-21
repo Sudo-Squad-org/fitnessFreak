@@ -2,8 +2,8 @@ import React, { useContext } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import { Navigate, Outlet } from "react-router-dom";
 
-export const ProtectedRoute = ({ requireAdmin = false }) => {
-  const { currentUser, loading, isAdmin } = useContext(AuthContext);
+export const ProtectedRoute = ({ requireAdmin = false, skipOnboardingCheck = false }) => {
+  const { currentUser, loading, isAdmin, onboardingCompleted } = useContext(AuthContext);
 
   if (loading) {
     return (
@@ -15,6 +15,10 @@ export const ProtectedRoute = ({ requireAdmin = false }) => {
 
   if (!currentUser) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (!skipOnboardingCheck && !onboardingCompleted) {
+    return <Navigate to="/onboarding" replace />;
   }
 
   if (requireAdmin && !isAdmin) {
