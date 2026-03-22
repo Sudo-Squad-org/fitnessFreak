@@ -42,3 +42,16 @@ export const HEALTH_CONDITIONS = [
 export const GOALS = ["weight_loss", "muscle_gain", "maintain"];
 
 export const DIET_TYPES = ["veg", "vegan", "non_veg", "keto"];
+
+export const FITNESS_LEVELS    = ["beginner", "intermediate", "advanced"];
+export const COMMUNITY_GOALS   = ["weight_loss", "muscle_gain", "maintain", "endurance"];
+export const PREFERRED_DAYS    = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+export const CONTENT_TYPES     = ["article", "workout_plan", "meal_plan"];
+export const CHALLENGE_METRICS = ["workouts_count", "active_days", "meals_logged"];
+export const FEED_GOAL_FILTERS = [
+  { value: "",            label: "All"         },
+  { value: "weight_loss", label: "Weight Loss" },
+  { value: "muscle_gain", label: "Muscle Gain" },
+  { value: "maintain",    label: "Maintain"    },
+  { value: "endurance",   label: "Endurance"   },
+];

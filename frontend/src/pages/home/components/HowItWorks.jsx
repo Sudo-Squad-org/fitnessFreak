@@ -1,31 +1,31 @@
 import React from "react";
-import { UserPlus, Search, CalendarCheck, PlayCircle } from "lucide-react";
+import { UserPlus, Dumbbell, LineChart, Users } from "lucide-react";
 import { FadeIn } from "@/components/common/FadeIn";
 
 const steps = [
   {
     id: "01",
-    title: "Create your account",
-    description: "Sign up in under 30 seconds. No credit card required to get started.",
+    title: "Onboard in minutes",
+    description: "Set your goals, health conditions, and preferences. Get a personalized plan on the spot — no blank dashboard.",
     icon: UserPlus,
   },
   {
     id: "02",
-    title: "Browse classes",
-    description: "Filter by category, difficulty, and format to find your perfect workout.",
-    icon: Search,
+    title: "Train & eat right",
+    description: "Follow your condition-aware workout plan and macro targets. Log meals, complete exercises, build the habit.",
+    icon: Dumbbell,
   },
   {
     id: "03",
-    title: "Book your spot",
-    description: "Confirm your seat instantly. Get a reminder before it starts.",
-    icon: CalendarCheck,
+    title: "Track & recover",
+    description: "Log sleep, check your readiness score, track mood, earn badges, and see your body change week over week.",
+    icon: LineChart,
   },
   {
     id: "04",
-    title: "Join & train",
-    description: "Jump in live, follow along on-demand, or head to your nearest center.",
-    icon: PlayCircle,
+    title: "Connect & grow",
+    description: "Match with a fitness buddy, join group challenges, and access pro content from expert coaches.",
+    icon: Users,
   },
 ];
 
@@ -36,7 +36,7 @@ export const HowItWorks = () => {
         <FadeIn className="mx-auto max-w-2xl text-center mb-20">
           <p className="text-sm font-semibold uppercase tracking-widest text-indigo-500 mb-3">How it works</p>
           <h2 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-            Four steps to your best workout
+            Four steps to your healthiest self
           </h2>
         </FadeIn>
 

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
-import { LogOut, Shield, Sun, Moon, Menu, X, Salad, Target, TrendingUp, Dumbbell, Heart } from "lucide-react";
+import { LogOut, Shield, Sun, Moon, Menu, X, Salad, Target, TrendingUp, Dumbbell, Heart, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "./NotificationBell";
 
@@ -22,10 +22,9 @@ export const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   const navLinkClass = (path) =>
-    `text-sm font-medium transition-colors duration-150 ${
-      isActive(path)
-        ? "text-foreground"
-        : "text-muted-foreground hover:text-foreground"
+    `text-sm font-medium transition-colors duration-150 ${isActive(path)
+      ? "text-foreground"
+      : "text-muted-foreground hover:text-foreground"
     }`;
 
   return (
@@ -41,7 +40,6 @@ export const Navbar = () => {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-8">
-          <Link to="/" className={navLinkClass("/")}>Home</Link>
           <Link to="/classes" className={navLinkClass("/classes")}>Classes</Link>
           {currentUser && <Link to="/dashboard" className={navLinkClass("/dashboard")}>Dashboard</Link>}
           {currentUser && (
@@ -74,14 +72,19 @@ export const Navbar = () => {
               Progress
             </Link>
           )}
+          {currentUser && (
+            <Link to="/community" className={`flex items-center gap-1.5 text-sm font-medium transition-colors duration-150 ${isActive("/community") ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              <Users className="h-3.5 w-3.5" />
+              Community
+            </Link>
+          )}
           {isAdmin && (
             <Link
               to="/admin"
-              className={`flex items-center gap-1.5 text-sm font-medium transition-colors duration-150 ${
-                isActive("/admin")
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors duration-150 ${isActive("/admin")
                   ? "text-indigo-600 dark:text-indigo-400"
                   : "text-muted-foreground hover:text-indigo-600 dark:hover:text-indigo-400"
-              }`}
+                }`}
             >
               <Shield className="h-3.5 w-3.5" />
               Admin
@@ -152,7 +155,6 @@ export const Navbar = () => {
         <div className="md:hidden border-t border-border bg-background">
           <div className="flex flex-col gap-1 px-4 py-4">
             {[
-              { to: "/", label: "Home" },
               { to: "/classes", label: "Classes" },
               ...(currentUser ? [{ to: "/dashboard", label: "Dashboard" }] : []),
               ...(currentUser ? [{ to: "/workouts", label: "Workouts", icon: Dumbbell }] : []),
@@ -160,6 +162,7 @@ export const Navbar = () => {
               ...(currentUser ? [{ to: "/nutrition", label: "Nutrition", icon: Salad }] : []),
               ...(currentUser ? [{ to: "/goals", label: "Goals", icon: Target }] : []),
               ...(currentUser ? [{ to: "/progress", label: "Progress", icon: TrendingUp }] : []),
+              ...(currentUser ? [{ to: "/community", label: "Community", icon: Users }] : []),
               ...(currentUser ? [{ to: "/profile", label: "Profile" }] : []),
               ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: Shield }] : []),
             ].map(({ to, label, icon: Icon }) => (
@@ -167,11 +170,10 @@ export const Navbar = () => {
                 key={to}
                 to={to}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive(to)
+                className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive(to)
                     ? "bg-muted text-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
+                  }`}
               >
                 {Icon && <Icon className="h-4 w-4" />}
                 {label}

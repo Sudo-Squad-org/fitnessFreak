@@ -1,6 +1,6 @@
 import os
 import httpx
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
@@ -623,3 +623,23 @@ def _emit_workout_event(user_id: str, log_date: str):
 @router.get("/health")
 def health():
     return {"status": "ok", "service": "workout-service"}
+
+
+@router.get("/internal/weekly-stats")
+def internal_weekly_stats(
+    user_id: str,
+    x_internal_secret: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
+):
+    """Internal endpoint: weekly workout count for a given user_id."""
+    _secret = os.getenv("SECRET_KEY", "supersecretkey")
+    if x_internal_secret != _secret:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    from datetime import date as _date, timedelta as _timedelta
+    today = _date.today()
+    week_start = today - _timedelta(days=today.weekday())
+    count = db.query(WorkoutLog).filter(
+        WorkoutLog.user_id == user_id,
+        WorkoutLog.logged_at >= week_start,
+    ).count()
+    return {"workout_count": count}

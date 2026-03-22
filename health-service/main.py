@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 from typing import Optional, List
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -385,3 +385,22 @@ def _mood_out(r: MoodLog) -> dict:
 @app.get("/health")
 def health_check():
     return {"status": "ok", "service": "health-service"}
+
+
+@app.get("/health/internal/weekly-stats")
+def internal_weekly_stats(
+    user_id: str,
+    x_internal_secret: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
+):
+    """Internal endpoint: weekly mood average for a given user_id."""
+    _secret = os.getenv("SECRET_KEY", "supersecretkey")
+    if x_internal_secret != _secret:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    week_start = date.today() - timedelta(days=date.today().weekday())
+    rows = db.query(MoodLog).filter(
+        MoodLog.user_id == user_id,
+        MoodLog.date >= week_start,
+    ).all()
+    mood_avg = round(sum(r.mood for r in rows) / len(rows), 1) if rows else None
+    return {"mood_avg": mood_avg}

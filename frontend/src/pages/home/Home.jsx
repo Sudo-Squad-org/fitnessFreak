@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { HeroSection } from "./components/HeroSection";
-import { FeaturesSection } from "./components/FeaturesSection";
-import { ClassesPreview } from "./components/ClassesPreview";
+import { PlatformModules } from "./components/FeaturesSection";
 import { HowItWorks } from "./components/HowItWorks";
+import { RoadmapSection } from "./components/RoadmapSection";
 import { Testimonials } from "./components/Testimonials";
 import { CTASection } from "./components/CTASection";
 
@@ -15,9 +15,9 @@ const Home = () => {
   return (
     <div className="flex min-h-screen flex-col w-full">
       <HeroSection />
-      <FeaturesSection />
+      <PlatformModules />
       <HowItWorks />
-      <ClassesPreview />
+      <RoadmapSection />
       <Testimonials />
       <CTASection />
     </div>

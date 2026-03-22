@@ -8,7 +8,7 @@ const reviews = [
     role: "Member since 2024",
     avatar: "DM",
     quote:
-      "The live trainers kept me accountable like nothing else. I feel stronger than ever and booking takes literally seconds.",
+      "The personalized workout plan actually accounts for my PCOS. That's something no other app has done for me. I've been consistent for 10 weeks straight.",
     stars: 5,
   },
   {
@@ -16,7 +16,7 @@ const reviews = [
     role: "Member since 2023",
     avatar: "MP",
     quote:
-      "I travel constantly for work. Being able to drop into a HIIT class from my hotel room has completely changed my routine.",
+      "The buddy system changed everything. Having a matched partner with the same muscle-gain goal keeps me accountable in a way leaderboards never did.",
     stars: 5,
   },
   {
@@ -24,7 +24,7 @@ const reviews = [
     role: "Member since 2025",
     avatar: "CS",
     quote:
-      "The streak tracking on the dashboard is exactly the motivation I needed. Haven't broken mine in 6 weeks.",
+      "I track my sleep, log my meals, and check my readiness score every morning. It's the first app that actually connects all of that in one place.",
     stars: 5,
   },
 ];
@@ -42,10 +42,10 @@ export const Testimonials = () => {
         <FadeIn className="text-center mb-16">
           <p className="text-sm font-semibold uppercase tracking-widest text-indigo-500 mb-3">Testimonials</p>
           <h2 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-            Loved by thousands
+            Real members. Remarkable results.
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Real members. Real results.
+            Across workouts, nutrition, sleep, and community — here's what they say.
           </p>
         </FadeIn>
 

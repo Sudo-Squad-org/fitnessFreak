@@ -25,6 +25,7 @@ const Wellness = lazy(() => import("../pages/wellness/Wellness"));
 const Goals = lazy(() => import("../pages/goals/Goals"));
 const Progress = lazy(() => import("../pages/progress/Progress"));
 const Profile = lazy(() => import("../pages/profile/Profile"));
+const Community = lazy(() => import("../pages/community/Community"));
 
 export const AppRoutes = () => {
   return (
@@ -60,6 +61,7 @@ export const AppRoutes = () => {
                   <Route path="/goals" element={<Goals />} />
                   <Route path="/progress" element={<Progress />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/community" element={<Community />} />
                 </Route>
               </Route>
 

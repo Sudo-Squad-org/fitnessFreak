@@ -1,8 +1,8 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export const HeroSection = () => {
@@ -14,9 +14,9 @@ export const HeroSection = () => {
   };
 
   const stats = [
-    { value: "12+", label: "Class types" },
-    { value: "50+", label: "Expert trainers" },
+    { value: "9",    label: "Core modules" },
     { value: "10k+", label: "Active members" },
+    { value: "100%", label: "Condition-aware" },
   ];
 
   return (
@@ -35,10 +35,11 @@ export const HeroSection = () => {
           transition={{ duration: 0.5 }}
           className="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-1.5 text-xs font-medium text-muted-foreground shadow-sm"
         >
-          <span className="flex h-2 w-2 rounded-full bg-emerald-500">
-            <span className="animate-ping absolute h-2 w-2 rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative flex h-2 w-2 rounded-full bg-emerald-500" />
           </span>
-          Live classes available now
+          Platform now live — 9 modules, zero compromises
         </motion.div>
 
         {/* Heading */}
@@ -48,9 +49,9 @@ export const HeroSection = () => {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="text-5xl font-black tracking-tight text-foreground sm:text-7xl lg:text-8xl leading-none"
         >
-          Train smarter.
+          Your complete
           <br />
-          <span className="text-indigo-500">Live stronger.</span>
+          <span className="text-indigo-500">fitness OS.</span>
         </motion.h1>
 
         {/* Subtitle */}
@@ -60,7 +61,9 @@ export const HeroSection = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground"
         >
-          Book expert-led live classes, track your progress, and build the habit that lasts — all in one platform.
+          Personalized workouts. Nutrition. Sleep &amp; recovery. Goals. Community.
+          <br />
+          Everything your health needs — unified, intelligent, and built around you.
         </motion.p>
 
         {/* CTA buttons */}
@@ -74,8 +77,8 @@ export const HeroSection = () => {
             Get Started Free
             <ArrowRight className="h-4 w-4" />
           </Button>
-          <Button asChild variant="outline" size="lg" className="h-12 w-full rounded-full px-8 text-sm font-semibold sm:w-auto">
-            <Link to="/classes">Browse Classes</Link>
+          <Button variant="outline" size="lg" onClick={handleGetStarted} className="h-12 w-full rounded-full px-8 text-sm font-semibold sm:w-auto">
+            Explore the Platform
           </Button>
         </motion.div>
 

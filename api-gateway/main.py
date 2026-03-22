@@ -63,6 +63,13 @@ async def auth_proxy(path: str, request: Request):
     return await _proxy(request, f"{AUTH}/auth/{path}", await _body(request))
 
 
+# ── Admin (proxied through auth-service) ──────────────────────────────────────
+
+@app.api_route("/admin/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+async def admin_proxy(path: str, request: Request):
+    return await _proxy(request, f"{AUTH}/auth/admin/{path}", await _body(request))
+
+
 # ── Classes (list + create) ────────────────────────────────────────────────────
 
 @app.api_route("/classes", methods=["GET", "POST"])
@@ -158,3 +165,18 @@ async def notifications_path_proxy(path: str, request: Request):
 @app.api_route("/health/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def health_proxy(path: str, request: Request):
     return await _proxy(request, f"{HEALTH}/health/{path}", await _body(request))
+
+
+# ── Community ──────────────────────────────────────────────────────────────────
+
+COMMUNITY = "http://community-service:8000"
+
+
+@app.api_route("/community", methods=["GET", "POST"])
+async def community_root_proxy(request: Request):
+    return await _proxy(request, f"{COMMUNITY}/community", await _body(request))
+
+
+@app.api_route("/community/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+async def community_path_proxy(path: str, request: Request):
+    return await _proxy(request, f"{COMMUNITY}/community/{path}", await _body(request))

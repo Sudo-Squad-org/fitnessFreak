@@ -435,15 +435,15 @@ CREATE TABLE integrations (
 
 ---
 
-## Phase 3 — Privacy-First Community (Weeks 10–18)
+## [x] Phase 3 — Privacy-First Community (Weeks 10–18)
 > Goal: 70%+ of fitness transformations happen in community. Build it right.
 
 ### 3.1 Accountability Buddy System (`community-service` — NEW)
-- [ ] Create `community-service` (FastAPI + PostgreSQL)
-- [ ] Match users based on fitness level, goals, schedule
-- [ ] Weekly check-in (thumbs up/down per workout)
-- [ ] Anonymous option (buddy sees progress, not identity)
-- [ ] Private messaging between buddies
+- [x] Create `community-service` (FastAPI + PostgreSQL)
+- [x] Match users based on fitness level, goals, schedule
+- [x] Weekly check-in (thumbs up/down per workout)
+- [x] Anonymous option (buddy sees progress, not identity)
+- [x] Private messaging between buddies
 
 <details>
 <summary><strong>How to achieve this</strong></summary>
@@ -510,10 +510,10 @@ CREATE TABLE buddy_messages (
 ---
 
 ### 3.2 Group Challenges
-- [ ] Create/join challenges ("30-day strength challenge", "10k steps/day week")
-- [ ] Fair leaderboards: rank by % improvement, not absolute performance
-- [ ] Anonymous participation option
-- [ ] Challenge completion badges
+- [x] Create/join challenges ("30-day strength challenge", "10k steps/day week")
+- [x] Fair leaderboards: rank by % improvement, not absolute performance
+- [x] Anonymous participation option
+- [x] Challenge completion badges
 
 <details>
 <summary><strong>How to achieve this</strong></summary>
@@ -565,10 +565,10 @@ CREATE TABLE challenge_members (
 ---
 
 ### 3.3 Community Feed (Opt-in Only)
-- [ ] Share milestones only (not every workout)
-- [ ] No follower counts, no like counts (removes social anxiety)
-- [ ] Comment support for encouragement
-- [ ] Organized by goal type (weight loss, muscle gain, endurance)
+- [x] Share milestones only (not every workout)
+- [x] No follower counts, no like counts (removes social anxiety)
+- [x] Comment support for encouragement
+- [x] Organized by goal type (weight loss, muscle gain, endurance)
 
 <details>
 <summary><strong>How to achieve this</strong></summary>
@@ -626,9 +626,9 @@ CREATE TABLE reactions (
 ---
 
 ### 3.4 Expert Content Hub
-- [ ] Trainer-created workout plans (marketplace model)
-- [ ] Nutritionist-curated meal plans
-- [ ] Expert articles on training, recovery, nutrition
+- [x] Trainer-created workout plans (marketplace model)
+- [x] Nutritionist-curated meal plans
+- [x] Expert articles on training, recovery, nutrition
 
 <details>
 <summary><strong>How to achieve this</strong></summary>

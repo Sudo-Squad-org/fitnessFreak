@@ -3,16 +3,19 @@ import re
 import random
 import logging
 import smtplib
+import httpx
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta
+from typing import Optional
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logger = logging.getLogger("auth-service")
 
-from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi import FastAPI, Depends, HTTPException, Request, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
+from sqlalchemy import or_
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -28,6 +31,7 @@ from schemas import (
 from utils import hash_password, verify, create_token, generate_opaque_token, hash_token, SECRET_KEY, ALGO
 
 ADMIN_SECRET = os.getenv("ADMIN_SECRET", "change-me-in-production")
+NOTIFICATIONS_URL = os.getenv("NOTIFICATIONS_URL", "http://notifications-service:8000")
 REFRESH_TOKEN_EXPIRE_DAYS = 30
 
 # ── Email config ──────────────────────────────────────────────────────────────
@@ -56,6 +60,7 @@ def _run_migrations():
         ("users", "gender",        "VARCHAR"),
         ("users", "height_cm",     "FLOAT"),
         ("users", "weight_kg",     "FLOAT"),
+        ("users", "is_active",     "BOOLEAN DEFAULT TRUE"),
     ]
     with engine.connect() as conn:
         for table, col, col_type in new_cols:
@@ -248,6 +253,9 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == body.email).first()
     if not user or not verify(body.password, user.password_hash):
         raise HTTPException(401, "Invalid credentials")
+
+    if user.is_active is False:
+        raise HTTPException(403, "Account has been deactivated. Please contact support.")
 
     if not user.email_verified:
         raise HTTPException(403, "Email not verified. Please check your inbox and verify your email before logging in.")
@@ -676,3 +684,149 @@ def confirm_delete_account(
         raise HTTPException(500, "Failed to delete account")
 
     return {"message": "Account deleted successfully"}
+
+
+# ── Admin User Management ─────────────────────────────────────────────────────
+
+def _require_admin(current=Depends(_get_current_user)):
+    user, payload = current
+    if payload.get("role") != "admin":
+        raise HTTPException(403, "Admin access required")
+    return user, payload
+
+
+def _user_to_dict(user):
+    return {
+        "id":                   user.id,
+        "name":                 user.name,
+        "email":                user.email,
+        "role":                 user.role,
+        "is_active":            user.is_active if user.is_active is not None else True,
+        "email_verified":       user.email_verified,
+        "onboarding_completed": user.onboarding_completed,
+    }
+
+
+@app.get("/auth/admin/users")
+def list_users(
+    search: Optional[str] = Query(None),
+    role:   Optional[str] = Query(None),
+    limit:  int           = Query(50, le=200),
+    offset: int           = Query(0),
+    db: Session = Depends(get_db),
+    _=Depends(_require_admin),
+):
+    q = db.query(User)
+    if search:
+        q = q.filter(or_(
+            User.name.ilike(f"%{search}%"),
+            User.email.ilike(f"%{search}%"),
+        ))
+    if role:
+        q = q.filter(User.role == role)
+    total = q.count()
+    users = q.order_by(User.name).offset(offset).limit(limit).all()
+    return {
+        "total": total,
+        "users": [_user_to_dict(u) for u in users],
+    }
+
+
+@app.patch("/auth/admin/users/{user_id}/role")
+def update_user_role(
+    user_id: str,
+    body: dict,
+    db: Session = Depends(get_db),
+    current=Depends(_require_admin),
+):
+    admin_user, _ = current
+    if user_id == admin_user.id:
+        raise HTTPException(400, "Cannot change your own role")
+    new_role = body.get("role")
+    if new_role not in ("user", "admin", "trainer"):
+        raise HTTPException(400, "Role must be 'user', 'admin', or 'trainer'")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(404, "User not found")
+    user.role = new_role
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(500, "Failed to update role")
+    return _user_to_dict(user)
+
+
+@app.patch("/auth/admin/users/{user_id}/active")
+def toggle_user_active(
+    user_id: str,
+    body: dict,
+    db: Session = Depends(get_db),
+    current=Depends(_require_admin),
+):
+    admin_user, _ = current
+    if user_id == admin_user.id:
+        raise HTTPException(400, "Cannot deactivate your own account")
+    is_active = body.get("is_active")
+    if not isinstance(is_active, bool):
+        raise HTTPException(400, "is_active must be a boolean")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(404, "User not found")
+    user.is_active = is_active
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(500, "Failed to update status")
+    return _user_to_dict(user)
+
+
+@app.post("/auth/admin/broadcast")
+def broadcast_notification(
+    body: dict,
+    db: Session = Depends(get_db),
+    _=Depends(_require_admin),
+):
+    title = (body.get("title") or "").strip()
+    msg_body = (body.get("body") or "").strip()
+    if not title:
+        raise HTTPException(400, "title is required")
+
+    users = db.query(User).filter(
+        User.is_active != False,  # noqa: E712
+        User.email_verified == True,
+    ).all()
+
+    sent = 0
+    secret = os.getenv("SECRET_KEY", "change-me-in-production")
+    for user in users:
+        try:
+            httpx.post(
+                f"{NOTIFICATIONS_URL}/internal/notifications",
+                json={"user_id": user.id, "type": "system", "title": title, "body": msg_body or None},
+                headers={"X-Internal-Secret": secret},
+                timeout=5,
+            )
+            sent += 1
+        except Exception:
+            pass
+
+    return {"sent": sent, "total_users": len(users)}
+
+
+@app.get("/auth/admin/stats")
+def admin_stats(
+    db: Session = Depends(get_db),
+    _=Depends(_require_admin),
+):
+    total_users  = db.query(User).count()
+    active_users = db.query(User).filter(User.is_active != False).count()  # noqa: E712
+    admin_count  = db.query(User).filter(User.role == "admin").count()
+    trainer_count = db.query(User).filter(User.role == "trainer").count()
+    return {
+        "total_users":   total_users,
+        "active_users":  active_users,
+        "admin_count":   admin_count,
+        "trainer_count": trainer_count,
+    }

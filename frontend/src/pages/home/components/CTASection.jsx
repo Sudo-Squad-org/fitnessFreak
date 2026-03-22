@@ -26,13 +26,13 @@ export const CTASection = () => {
           <FadeIn className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium text-zinc-400 mb-6">
               <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
-              No commitment required
+              Your plan, ready in minutes
             </div>
             <h2 className="text-4xl font-black tracking-tight text-white sm:text-5xl">
               Start your journey today.
             </h2>
             <p className="mt-4 text-lg text-zinc-400 max-w-lg">
-              Create a free account, explore live classes, and experience the difference. No credit card needed.
+              Create a free account, complete onboarding in minutes, and get your first personalized plan instantly. No credit card needed.
             </p>
           </FadeIn>
 

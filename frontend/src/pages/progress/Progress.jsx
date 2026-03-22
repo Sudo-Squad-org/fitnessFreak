@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { progressService } from "@/services/progressService";
+import { workoutService } from "@/services/workoutService";
 import { FadeIn } from "@/components/common/FadeIn";
 import { Loader2, TrendingUp, Award, Scale, BarChart2, Plus } from "lucide-react";
 import { BadgeGrid } from "./components/BadgeGrid";
@@ -11,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 const Progress = () => {
   const { toast } = useToast();
   const [stats, setStats] = useState(null);
+  const [workoutStats, setWorkoutStats] = useState(null);
   const [badges, setBadges] = useState([]);
   const [badgeDefs, setBadgeDefs] = useState({});
   const [measurements, setMeasurements] = useState([]);
@@ -20,14 +22,16 @@ const Progress = () => {
 
   const fetchData = async () => {
     try {
-      const [statsRes, badgesRes, defsRes, measureRes, reportRes] = await Promise.all([
+      const [statsRes, workoutStatsRes, badgesRes, defsRes, measureRes, reportRes] = await Promise.all([
         progressService.getStats(),
+        workoutService.getStats(),
         progressService.getBadges(),
         progressService.getBadgeDefinitions(),
         progressService.getMeasurements(),
         progressService.getWeeklyReport(),
       ]);
       setStats(statsRes.data);
+      setWorkoutStats(workoutStatsRes.data);
       setBadges(badgesRes.data);
       setBadgeDefs(defsRes.data);
       setMeasurements(measureRes.data);
@@ -60,8 +64,8 @@ const Progress = () => {
   }
 
   const statCards = [
-    { label: "Total Workouts", value: stats?.total_workouts ?? 0, icon: TrendingUp, color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-500/10" },
-    { label: "Current Streak", value: `${stats?.current_workout_streak ?? 0}d`, icon: BarChart2, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-500/10" },
+    { label: "Total Workouts", value: workoutStats?.totalWorkouts ?? stats?.total_workouts ?? 0, icon: TrendingUp, color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-500/10" },
+    { label: "Current Streak", value: `${workoutStats?.streak ?? stats?.current_workout_streak ?? 0}d`, icon: BarChart2, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-500/10" },
     { label: "Best Streak", value: `${stats?.longest_workout_streak ?? 0}d`, icon: Award, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10" },
     { label: "Meals Logged", value: stats?.total_meals_logged ?? 0, icon: Scale, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-500/10" },
   ];
@@ -104,11 +108,11 @@ const Progress = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground text-xs">Workouts total</span>
-                  <p className="font-semibold text-foreground">{report.total_workouts}</p>
+                  <p className="font-semibold text-foreground">{workoutStats?.totalWorkouts ?? report.total_workouts}</p>
                 </div>
                 <div>
                   <span className="text-muted-foreground text-xs">Active streak</span>
-                  <p className="font-semibold text-foreground">{report.current_streak} days</p>
+                  <p className="font-semibold text-foreground">{workoutStats?.streak ?? report.current_streak} days</p>
                 </div>
                 <div>
                   <span className="text-muted-foreground text-xs">Meals logged</span>
