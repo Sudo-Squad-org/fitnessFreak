@@ -1,5 +1,8 @@
 import { api } from "./api";
 
+const shouldSeedClasses = (filters, classes) =>
+  classes.length === 0 && Object.keys(filters).length === 0;
+
 export const bookingService = {
   // ── Classes (public) ────────────────────────────────────────
   getClasses: (filters = {}) => {
@@ -11,6 +14,21 @@ export const bookingService = {
     if (filters.search) params.append("search", filters.search);
     const qs = params.toString();
     return api.get(`/classes${qs ? `?${qs}` : ""}`);
+  },
+
+  getClassesWithSeed: async (filters = {}) => {
+    let response = await bookingService.getClasses(filters);
+
+    if (shouldSeedClasses(filters, response.data)) {
+      try {
+        await bookingService.seed();
+        response = await bookingService.getClasses(filters);
+      } catch {
+        // Leave the original empty response intact if seeding is unavailable.
+      }
+    }
+
+    return response;
   },
 
   getClass: (classId) => api.get(`/classes/${classId}`),

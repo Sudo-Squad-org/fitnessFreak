@@ -352,12 +352,7 @@ const Classes = () => {
       if (classType !== "all") filters.class_type = classType;
       if (search) filters.search = search;
 
-      let res = await bookingService.getClasses(filters);
-      // Auto-seed on fresh deployment (no filters applied)
-      if (res.data.length === 0 && !category && !difficulty && !classType && !search) {
-        await bookingService.seed();
-        res = await bookingService.getClasses(filters);
-      }
+      const res = await bookingService.getClassesWithSeed(filters);
       setClasses(res.data);
     } catch {
       toast({ title: "Error", description: "Could not load classes.", variant: "destructive" });

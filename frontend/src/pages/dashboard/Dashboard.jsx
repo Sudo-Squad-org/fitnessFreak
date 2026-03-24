@@ -53,7 +53,7 @@ const Dashboard = () => {
       // Core data — always needed
       const [bookingsRes, classesRes] = await Promise.allSettled([
         bookingService.getMyBookings(),
-        bookingService.getClasses(),
+        bookingService.getClassesWithSeed(),
       ]);
       if (bookingsRes.status === "fulfilled") setBookings(bookingsRes.value.data);
       if (classesRes.status === "fulfilled") setClasses(classesRes.value.data.slice(0, 3));
